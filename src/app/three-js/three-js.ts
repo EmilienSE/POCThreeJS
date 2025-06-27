@@ -2,9 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import * as THREE from 'three';
-import { OpeningDirection } from './opening-direction/opening-direction.enum';
+import { OpeningDirection } from '../utils/opening-direction.enum';
 import { FRAME_HEIGHT, FRAME_THICKNESS, WINDOW_WIDTH, INTERIOR_GAP } from '../utils/consts';
 import { Frame } from './frame/frame';
+import { Shapes } from '../utils/shapes';
 
 @Component({
   selector: 'app-three-js',
@@ -37,7 +38,6 @@ export class ThreeJS {
   }
 
   onDimensionChange() {
-    console.log('Dimensions changed');
     this.windowGroup && this.scene.remove(this.windowGroup); // Remove the old window group if it exists
     this.buildWindow();
   }
@@ -52,7 +52,8 @@ export class ThreeJS {
         this.interiorGap,
         this.openingDirection,
         this.horizontalGlazingBarsNb,
-        this.verticalGlazingBarsNb
+        this.verticalGlazingBarsNb,
+        Shapes.Rectangle
       );
       frame.position.set((i - (this.frameNb - 1) / 2) * (this.windowWidth / this.frameNb) - (i > 0 ? this.frameThickness * i : 0), 0, 0);
       frames.push(frame);
