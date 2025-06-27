@@ -62,44 +62,44 @@ export function createRectangleFrame(
         position: [frameWidth / 2  - 0.1 - frameThickness / 2, 0, 0.1]
       }
     ]);
-
-    buildGlass(
-      frameHeight,
-      frameWidth,
-      frameThickness,
-      frameGroup
-    );
-        
-    buildOpening(
-      frameHeight,
-      frameWidth,
-      frameThickness,
-      interiorGap,
-      openingDirection,
-      frameGroup
-    );
-
-    buildGlazingBars(
-      frameHeight,
-      frameWidth,
-      frameThickness,
-      interiorGap,
-      horGlazingBarsNumber,
-      verGlazingBarsNumber,
-      frameGroup
-    );
   }
-  
-    frames.forEach(({ geometry, position }) => {
-      const frame = new THREE.Mesh(geometry, frameMaterial);
-      frame.position.set(...position);
-      frameGroup.add(frame);
-    });
 
-    return frameGroup;
+  buildGlass(
+    frameHeight,
+    frameWidth,
+    frameThickness,
+    frameGroup
+  );
+      
+  buildOpening(
+    frameHeight,
+    frameWidth,
+    frameThickness,
+    interiorGap,
+    openingDirection,
+    frameGroup
+  );
+
+  buildGlazingBars(
+    frameHeight,
+    frameWidth,
+    frameThickness,
+    interiorGap,
+    horGlazingBarsNumber,
+    verGlazingBarsNumber,
+    frameGroup
+  );
+  
+  frames.forEach(({ geometry, position }) => {
+    const frame = new THREE.Mesh(geometry, frameMaterial);
+    frame.position.set(...position);
+    frameGroup.add(frame);
+  });
+
+  return frameGroup;
 }
 
-function   buildGlass(
+function buildGlass(
     frameHeight: number,
     frameWidth: number,
     frameThickness: number,

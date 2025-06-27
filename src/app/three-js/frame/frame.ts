@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { OpeningDirection } from '../../utils/opening-direction.enum';
 import { Shapes } from '../../utils/shapes';
 import { createRectangleFrame } from './shapes/rectangle-frame';
+import { createCircleFrame } from './shapes/circle-frame';
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +28,17 @@ export class Frame {
     switch (shape) {
       case Shapes.Rectangle:
         this.frameGroup = createRectangleFrame(
+          frameWidth,
+          frameHeight,
+          frameThickness,
+          interiorGap,
+          openingDirection,
+          horGlazingBarsNumber,
+          verGlazingBarsNumber
+        )
+        break;
+      case Shapes.Circle:
+        this.frameGroup = createCircleFrame(
           frameWidth,
           frameHeight,
           frameThickness,

@@ -24,12 +24,12 @@ export class ThreeJS {
   frameThickness = FRAME_THICKNESS;
   interiorGap = INTERIOR_GAP;
 
-  frameNb = 2;
-  horizontalGlazingBarsNb = 3;
-  verticalGlazingBarsNb = 1;
+  frameNb = 1;
+  horizontalGlazingBarsNb = 0;
+  verticalGlazingBarsNb = 0;
   
   openingDirectionOptions = Object.values(OpeningDirection);
-  openingDirection: OpeningDirection = OpeningDirection.Oscillating; // Direction d'ouverture des vantaux
+  openingDirection: OpeningDirection = OpeningDirection.Fixed; // Direction d'ouverture des vantaux
   frameService: Frame;
 
   constructor(frameService: Frame) {
@@ -53,7 +53,7 @@ export class ThreeJS {
         this.openingDirection,
         this.horizontalGlazingBarsNb,
         this.verticalGlazingBarsNb,
-        Shapes.Rectangle
+        Shapes.Circle
       );
       frame.position.set((i - (this.frameNb - 1) / 2) * (this.windowWidth / this.frameNb) - (i > 0 ? this.frameThickness * i : 0), 0, 0);
       frames.push(frame);

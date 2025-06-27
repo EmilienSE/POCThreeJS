@@ -9,10 +9,10 @@
     <input type="number" step="1" min="1" [(ngModel)]="frameNb" (input)="onDimensionChange()">
   </label>
   <label style="margin-left: 1em;">Nb petits bois horizontaux :
-    <input type="number" step="1" min="1" [(ngModel)]="horizontalGlazingBarsNb" (input)="onDimensionChange()">
+    <input type="number" step="1" min="0" [(ngModel)]="horizontalGlazingBarsNb" (input)="onDimensionChange()">
   </label>
   <label style="margin-left: 1em;">Nb petits bois verticaux :
-    <input type="number" step="1" min="1" [(ngModel)]="verticalGlazingBarsNb" (input)="onDimensionChange()">
+    <input type="number" step="1" min="0" [(ngModel)]="verticalGlazingBarsNb" (input)="onDimensionChange()">
   </label>
   <label style="margin-left: 1em;" for="openingDirection">Sens d'ouverture :
       <select name="openingDirection" id="openingDirection" [(ngModel)]="openingDirection" (change)="onDimensionChange()">
