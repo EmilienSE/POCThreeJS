@@ -4,5 +4,10 @@ export enum OpeningDirection {
     Right = 'RIGHT',
     Up = 'UP',
     Down = 'DOWN',
-    Oscillating = 'OSCILLATING'
+    Oscillating = 'OSCILLATING',
+    Rotating = 'ROTATING',
+    Tilting = 'TILTING',
+    Sliding = 'SLIDING',
+    Pocket = 'POCKET',
+    Accordion = 'ACCORDION',
 }
