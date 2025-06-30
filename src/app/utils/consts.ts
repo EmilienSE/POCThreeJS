@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export const WINDOW_WIDTH = 3;
-export const FRAME_HEIGHT = 6;
+export const FRAME_HEIGHT = 3;
 export const FRAME_THICKNESS = 0.03;
 export const INTERIOR_GAP = 0.1; // Espace pour les cadres intérieurs
 

@@ -53,7 +53,7 @@ export class ThreeJS {
         this.openingDirection,
         this.horizontalGlazingBarsNb,
         this.verticalGlazingBarsNb,
-        Shapes.Circle
+        Shapes.HalfMoon
       );
       frame.position.set((i - (this.frameNb - 1) / 2) * (this.windowWidth / this.frameNb) - (i > 0 ? this.frameThickness * i : 0), 0, 0);
       frames.push(frame);
