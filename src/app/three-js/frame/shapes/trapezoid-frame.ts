@@ -100,7 +100,6 @@ export function createTrapezoidFrame(
   frameGroup.add(glass);
 
   buildTrapezoidOpening(
-    [A, B, C, D],
     [innerA2, innerB2, innerC2, innerD2],
     openingDirection,
     frameGroup
@@ -117,7 +116,6 @@ export function createTrapezoidFrame(
 }
 
 function buildTrapezoidOpening(
-  outer: THREE.Vector2[],
   inner: THREE.Vector2[],
   openingDirection: OpeningDirection,
   frameGroup: THREE.Group
