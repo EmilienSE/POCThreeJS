@@ -31,7 +31,6 @@ export function createTrapezoidFrame(
     const n1 = new THREE.Vector2(-v1.y, v1.x);
     const v2 = new THREE.Vector2().subVectors(next, p).normalize();
     const n2 = new THREE.Vector2(-v2.y, v2.x);
-
     const n = n1.add(n2).normalize();
     return p.clone().add(n.multiplyScalar(thickness));
   }
@@ -60,6 +59,39 @@ export function createTrapezoidFrame(
     frameGroup.add(mesh);
   });
 
+  // Calcul du trapèze intérieur décalé de interiorGap
+  const bottomWidthInner = bottomWidth - 2 * interiorGap;
+  const topWidthInner = topWidth - 2 * interiorGap;
+  const halfBottomInner = bottomWidthInner / 2;
+  const halfTopInner = topWidthInner / 2;
+  const halfHeightInner = halfHeight - interiorGap;
+  const A2 = new THREE.Vector2(-halfBottomInner, -halfHeightInner);
+  const B2 = new THREE.Vector2(halfBottomInner, -halfHeightInner);
+  const C2 = new THREE.Vector2(halfTopInner, halfHeightInner);
+  const D2 = new THREE.Vector2(-halfTopInner, halfHeightInner);
+
+  // On applique le même offset pour l'épaisseur du cadre intérieur
+  const innerA2 = offsetPoint(A2, D2, B2, frameThickness / 2);
+  const innerB2 = offsetPoint(B2, A2, C2, frameThickness / 2);
+  const innerC2 = offsetPoint(C2, B2, D2, frameThickness / 2);
+  const innerD2 = offsetPoint(D2, C2, A2, frameThickness / 2);
+  // Ajout du cadre intérieur si ouvrant non fixe
+  if (openingDirection !== OpeningDirection.Fixed) {
+    const shapesInner = [
+      [A2, B2, innerB2, innerA2],
+      [B2, C2, innerC2, innerB2],
+      [C2, D2, innerD2, innerC2],
+      [D2, A2, innerA2, innerD2]
+    ];
+    shapesInner.forEach(points => {
+      const shape = new THREE.Shape(points);
+      const geometry = new THREE.ShapeGeometry(shape);
+      const mesh = new THREE.Mesh(geometry, frameMaterial);
+      mesh.position.z = 0.1; // Décalage léger pour éviter le z-fighting
+      frameGroup.add(mesh);
+    });
+  }
+
   const glassShape = new THREE.Shape([innerA, innerB, innerC, innerD]);
   const glassGeometry = new THREE.ShapeGeometry(glassShape);
   const glassMaterial = new THREE.ShaderMaterial(GLASS);
@@ -69,7 +101,7 @@ export function createTrapezoidFrame(
 
   buildTrapezoidOpening(
     [A, B, C, D],
-    [innerA, innerB, innerC, innerD],
+    [innerA2, innerB2, innerC2, innerD2],
     openingDirection,
     frameGroup
   );
