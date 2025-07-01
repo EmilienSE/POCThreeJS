@@ -6,6 +6,7 @@ import { createRectangleFrame } from './shapes/rectangle-frame';
 import { createCircleFrame } from './shapes/circle-frame';
 import { createHalfMoonFrame } from './shapes/half-moon-frame';
 import { createTrapezoidFrame } from './shapes/trapezoid-frame';
+import { createPentagonFrame } from './shapes/pentagon-frame';
 
 @Injectable({
   providedIn: 'root'
@@ -71,6 +72,17 @@ export class Frame {
           horGlazingBarsNumber,
           verGlazingBarsNumber,
           0.8 // ratio de la longueur du haut par rapport au bas
+        );
+        break;
+      case Shapes.Pentagon:
+        this.frameGroup = createPentagonFrame(
+          frameWidth,
+          frameHeight,
+          frameThickness,
+          interiorGap,
+          openingDirection,
+          horGlazingBarsNumber,
+          verGlazingBarsNumber,
         );
         break;
     }
