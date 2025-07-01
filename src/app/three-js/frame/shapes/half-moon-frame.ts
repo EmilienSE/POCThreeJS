@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OpeningDirection } from '../../../utils/opening-direction.enum';
-import { GLASS } from '../../../utils/consts';
+import { GLASS, LINE_COLOR } from '../../../utils/consts';
 
 export function createHalfMoonFrame(
   frameWidth: number,
@@ -124,7 +124,7 @@ function buildOpeningHalfMoon(
   openingDirection: OpeningDirection,
   frameGroup: THREE.Group
 ) {
-  const dashMaterial = new THREE.LineDashedMaterial({ color: 0x93807b, dashSize: 0.1, gapSize: 0.1, linewidth: 1 });
+  const dashMaterial = new THREE.LineDashedMaterial({ color: LINE_COLOR, dashSize: 0.1, gapSize: 0.1, linewidth: 1 });
   const rInnerX = frameWidth / 2 - frameThickness - interiorGap;
   const rInnerY = frameHeight - frameThickness - interiorGap;
   const spread = Math.PI / 6;

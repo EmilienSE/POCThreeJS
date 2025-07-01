@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OpeningDirection } from '../../../utils/opening-direction.enum';
-import { GLASS } from '../../../utils/consts';
+import { GLASS, LINE_COLOR } from '../../../utils/consts';
 
 export function createCircleFrame(
   frameWidth: number,
@@ -94,7 +94,7 @@ function buildOpening(
   frameGroup: THREE.Group
 ) {
   if (openingDirection === OpeningDirection.Fixed) return;
-  const dashMaterial = new THREE.LineDashedMaterial({ color: 0x93807b, dashSize: 0.1, gapSize: 0.1, linewidth: 1 });
+  const dashMaterial = new THREE.LineDashedMaterial({ color: LINE_COLOR, dashSize: 0.1, gapSize: 0.1, linewidth: 1 });
   const rInnerX = frameWidth / 2 - frameThickness - interiorGap;
   const rInnerY = frameHeight / 2 - frameThickness - interiorGap;
   let angleConverge = 0, angle1 = 0, angle2 = 0;
@@ -148,7 +148,7 @@ function buildGlazingBars(
 ) {
   const barRadiusX = frameWidth / 2 - frameThickness - interiorGap;
   const barRadiusY = frameHeight / 2 - frameThickness - interiorGap;
-  const dashMaterial = new THREE.LineBasicMaterial({ color: 0x93807b, linewidth: 1 });
+  const dashMaterial = new THREE.LineBasicMaterial({ color: LINE_COLOR, linewidth: 1 });
   if (horGlazingBarsNumber > 0) {
     for (let i = 1; i <= horGlazingBarsNumber; i++) {
       const angle = (i / (horGlazingBarsNumber + 1)) * Math.PI;

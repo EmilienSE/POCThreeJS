@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OpeningDirection } from '../../../utils/opening-direction.enum';
-import { GLASS } from '../../../utils/consts';
+import { GLASS, LINE_COLOR } from '../../../utils/consts';
 
 export function createRectangleFrame(
   frameWidth: number,
@@ -127,8 +127,8 @@ function buildOpening(
     frameHeight = frameHeight - interiorGap * 2;
     frameThickness = frameThickness;
     // Pointillés en triangle pour le sens d'ouverture des vantaux
-    const dashMaterial = new THREE.LineDashedMaterial({ color: 0x93807b, dashSize: 0.05, gapSize: 0.05, linewidth: 1 });
-    const solidMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+    const dashMaterial = new THREE.LineDashedMaterial({ color: LINE_COLOR, dashSize: 0.05, gapSize: 0.05, linewidth: 1 });
+    const solidMaterial = new THREE.LineBasicMaterial({ color: LINE_COLOR });
 
     // Diagonales pointillées pour le sens d'ouverture des vantaux
     // Gauche (diagonales vers le centre)
@@ -361,7 +361,7 @@ function buildGlazingBars(
     frameWidth = frameWidth - interiorGap * 2;
     frameHeight = frameHeight - interiorGap * 2;
     frameThickness = frameThickness;
-    const dashMaterial = new THREE.LineBasicMaterial({ color: 0x93807b, linewidth: 1 });
+    const dashMaterial = new THREE.LineBasicMaterial({ color: LINE_COLOR, linewidth: 1 });
 
     // Ajout des petits bois horizontaux
     if (horGlazingBarsNumber > 0) {
