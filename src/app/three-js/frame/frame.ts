@@ -7,6 +7,7 @@ import { createCircleFrame } from './shapes/circle-frame';
 import { createHalfMoonFrame } from './shapes/half-moon-frame';
 import { createTrapezoidFrame } from './shapes/trapezoid-frame';
 import { createPentagonFrame } from './shapes/pentagon-frame';
+import { createTriangleFrame } from './shapes/triangle-frame';
 
 @Injectable({
   providedIn: 'root'
@@ -83,6 +84,17 @@ export class Frame {
           openingDirection,
           horGlazingBarsNumber,
           verGlazingBarsNumber,
+        );
+        break;
+      case Shapes.Triangle:
+        this.frameGroup = createTriangleFrame(
+          frameWidth,
+          frameHeight,
+          frameThickness,
+          interiorGap,
+          openingDirection,
+          horGlazingBarsNumber,
+          verGlazingBarsNumber
         );
         break;
     }
