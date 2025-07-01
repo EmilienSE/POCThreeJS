@@ -5,6 +5,7 @@ import { Shapes } from '../../utils/shapes';
 import { createRectangleFrame } from './shapes/rectangle-frame';
 import { createCircleFrame } from './shapes/circle-frame';
 import { createHalfMoonFrame } from './shapes/half-moon-frame';
+import { createTrapezoidFrame } from './shapes/trapezoid-frame';
 
 @Injectable({
   providedIn: 'root'
@@ -58,6 +59,18 @@ export class Frame {
           openingDirection,
           horGlazingBarsNumber,
           verGlazingBarsNumber
+        );
+        break;
+      case Shapes.Trapezoid:
+        this.frameGroup = createTrapezoidFrame(
+          frameWidth,
+          frameHeight,
+          frameThickness,
+          interiorGap,
+          openingDirection,
+          horGlazingBarsNumber,
+          verGlazingBarsNumber,
+          0.8 // ratio de la longueur du haut par rapport au bas
         );
         break;
     }
