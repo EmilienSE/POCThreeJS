@@ -14,6 +14,13 @@
   <label style="margin-left: 1em;">Nb petits bois verticaux :
     <input type="number" step="1" min="0" [(ngModel)]="verticalGlazingBarsNb" (input)="onDimensionChange()">
   </label>
+  <label style="margin-left: 1em;" for="selectedShape">Forme :
+      <select name="selectedShape" id="selectedShape" [(ngModel)]="selectedShape" (change)="onDimensionChange()">
+        @for(shape of shapeOptions; track shape) {
+            <option [value]="shape" [selected]="selectedShape === shape">{{shape}}</option>
+        }
+      </select>
+  </label>
   <label style="margin-left: 1em;" for="openingDirection">Sens d'ouverture :
       <select name="openingDirection" id="openingDirection" [(ngModel)]="openingDirection" (change)="onDimensionChange()">
         @for(opening of openingDirectionOptions; track opening) {

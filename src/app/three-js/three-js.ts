@@ -31,6 +31,8 @@ export class ThreeJS {
   openingDirectionOptions = Object.values(OpeningDirection);
   openingDirection: OpeningDirection = OpeningDirection.Fixed; // Direction d'ouverture des vantaux
   frameService: Frame;
+  selectedShape: Shapes = Shapes.Rectangle;
+  shapeOptions = Object.values(Shapes);
 
   constructor(frameService: Frame) {
     this.frameService = frameService;
@@ -53,7 +55,7 @@ export class ThreeJS {
         this.openingDirection,
         this.horizontalGlazingBarsNb,
         this.verticalGlazingBarsNb,
-        Shapes.HalfMoon
+        this.selectedShape
       );
       frame.position.set((i - (this.frameNb - 1) / 2) * (this.windowWidth / this.frameNb) - (i > 0 ? this.frameThickness * i : 0), 0, 0);
       frames.push(frame);
@@ -70,7 +72,9 @@ export class ThreeJS {
       window.innerHeight / 200, window.innerHeight / -200,
       0.1, 1000
     );
-    this.renderer = new THREE.WebGLRenderer();
+    this.renderer = new THREE.WebGLRenderer({antialias: true});
+    
+    this.renderer.setPixelRatio( window.devicePixelRatio );
     this.renderer.setClearColor(0x000000, 0); // Fond transparent
 
     // Set the size of the renderer
