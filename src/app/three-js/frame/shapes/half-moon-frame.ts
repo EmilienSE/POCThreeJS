@@ -13,7 +13,7 @@ export function createHalfMoonFrame(
 ): THREE.Group {
   const frameGroup = new THREE.Group();
 
-  const outerRadiusX = frameWidth / 2 - frameThickness;
+  const outerRadiusX = frameWidth / 2;
   const outerRadiusY = frameHeight - frameThickness;
   const innerRadiusX = outerRadiusX - interiorGap;
   const innerRadiusY = outerRadiusY - interiorGap;
@@ -25,6 +25,7 @@ export function createHalfMoonFrame(
     new THREE.MeshBasicMaterial({ color: 0x000000 })
   );
   bottomFrame.position.set(0, frameThickness / 2, 0.02);
+  bottomFrame.position.y = -frameHeight / 2;
   frameGroup.add(bottomFrame);
 
   // Forme demi-ellipse extérieure
@@ -45,7 +46,9 @@ export function createHalfMoonFrame(
 
   const geometry = new THREE.ShapeGeometry(outerShape, 64);
   const mesh = new THREE.Mesh(geometry, frameMaterial);
+  mesh.position.y = -frameHeight / 2;
   frameGroup.add(mesh);
+
 
   // Contour intérieur pour menuiserie ouvrante (épais avec TubeGeometry)
   if (openingDirection !== OpeningDirection.Fixed) {
@@ -64,11 +67,12 @@ export function createHalfMoonFrame(
     const tubeGeometry = new THREE.TubeGeometry(curve, 64, frameThickness / 2, 16, false);
     const tubeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+    tube.position.y = -frameHeight / 2;
     frameGroup.add(tube);
   }
 
   // Vitre
-  buildGlassHalfMoon(outerRadiusX, outerRadiusY, frameThickness, frameGroup);
+  buildGlassHalfMoon(outerRadiusX, outerRadiusY, frameThickness, frameGroup, frameHeight);
 
   // Ouverture
   if (openingDirection !== OpeningDirection.Fixed) {
@@ -100,7 +104,8 @@ function buildGlassHalfMoon(
   outerRadiusX: number,
   outerRadiusY: number,
   frameThickness: number,
-  frameGroup: THREE.Group
+  frameGroup: THREE.Group,
+  frameHeight: number
 ) {
   const glassMaterial = new THREE.ShaderMaterial(GLASS);
 
@@ -113,6 +118,7 @@ function buildGlassHalfMoon(
   const geometry = new THREE.ShapeGeometry(shape, 64);
   const mesh = new THREE.Mesh(geometry, glassMaterial);
   mesh.position.z = 0.01;
+  mesh.position.y = -frameHeight / 2;
   frameGroup.add(mesh);
 }
 
@@ -151,6 +157,7 @@ function buildOpeningHalfMoon(
     const geo = new THREE.BufferGeometry().setFromPoints([start, converge]);
     const line = new THREE.Line(geo, dashMaterial);
     line.computeLineDistances();
+    line.position.y = -frameHeight / 2;
     frameGroup.add(line);
   });
 }

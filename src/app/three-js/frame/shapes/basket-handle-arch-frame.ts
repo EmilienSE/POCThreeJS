@@ -13,8 +13,8 @@ export function createBasketHandleArchFrame(
 ): THREE.Group {
   const frameGroup = new THREE.Group();
 
-  const outerW = frameWidth / 2 - frameThickness;
-  const outerH = frameHeight - frameThickness;
+  const outerW = frameWidth / 2;
+  const outerH = frameHeight;
   const innerW = outerW - interiorGap;
   const innerH = outerH - interiorGap;
 
@@ -26,6 +26,7 @@ export function createBasketHandleArchFrame(
     frameMaterial
   );
   bottomFrame.position.set(0, frameThickness / 2, 0.02);
+  bottomFrame.position.y = -frameHeight / 2;
   frameGroup.add(bottomFrame);
 
   const outerShape = new THREE.Shape();
@@ -46,6 +47,8 @@ export function createBasketHandleArchFrame(
 
   const geometry = new THREE.ShapeGeometry(outerShape, 64);
   const mesh = new THREE.Mesh(geometry, frameMaterial);
+  // Correction : décalage du mesh principal vers le bas
+  mesh.position.y = -frameHeight / 2;
   frameGroup.add(mesh);
 
   if (openingDirection !== OpeningDirection.Fixed) {
@@ -54,10 +57,11 @@ export function createBasketHandleArchFrame(
     const tubeGeometry = new THREE.TubeGeometry(curve, 64, frameThickness / 2, 16, false);
     const tubeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+    tube.position.y = -frameHeight / 2;
     frameGroup.add(tube);
   }
 
-  buildGlassBasketHandle(outerW, outerH, frameThickness, frameGroup);
+  buildGlassBasketHandle(outerW, outerH, frameThickness, frameGroup, frameHeight);
 
   if (openingDirection !== OpeningDirection.Fixed) {
     buildOpening(
@@ -106,7 +110,8 @@ function buildGlassBasketHandle(
   outerRadiusX: number,
   outerRadiusY: number,
   frameThickness: number,
-  frameGroup: THREE.Group
+  frameGroup: THREE.Group,
+  frameHeight: number
 ) {
   const glassMaterial = new THREE.ShaderMaterial(GLASS);
   const points = getBasketHandlePoints(outerRadiusX - frameThickness, outerRadiusY - frameThickness);
@@ -119,6 +124,7 @@ function buildGlassBasketHandle(
   const geometry = new THREE.ShapeGeometry(shape, 64);
   const mesh = new THREE.Mesh(geometry, glassMaterial);
   mesh.position.z = 0.01;
+  mesh.position.y = -frameHeight / 2;
   frameGroup.add(mesh);
 }
 function buildOpening(
@@ -156,6 +162,7 @@ function buildOpening(
       const geo = new THREE.BufferGeometry().setFromPoints([start, converge]);
       const line = new THREE.Line(geo, dashMaterial);
       line.computeLineDistances();
+      line.position.y = -frameHeight / 2;
       frameGroup.add(line);
     });
 }
