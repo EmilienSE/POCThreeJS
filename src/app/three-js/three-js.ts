@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import * as THREE from 'three';
 import { OpeningDirection } from '../utils/opening-direction.enum';
-import { FRAME_HEIGHT, FRAME_THICKNESS, WINDOW_WIDTH, INTERIOR_GAP } from '../utils/consts';
+import { FRAME_HEIGHT, FRAME_THICKNESS, WINDOW_WIDTH, INTERIOR_GAP, TOP_FRAME_HEIGHT } from '../utils/consts';
 import { Frame } from './frame/frame';
 import { Shapes } from '../utils/shapes';
 
@@ -21,17 +21,20 @@ export class ThreeJS {
 
   windowWidth = WINDOW_WIDTH;
   frameHeight = FRAME_HEIGHT;
+  topFrameHeight = TOP_FRAME_HEIGHT;
   frameThickness = FRAME_THICKNESS;
   interiorGap = INTERIOR_GAP;
 
-  frameNb = 1;
+  bottomFrameNb = 2;
+  hasTopFrame = true; 
   horizontalGlazingBarsNb = 0;
   verticalGlazingBarsNb = 0;
   
   openingDirectionOptions = Object.values(OpeningDirection);
-  openingDirection: OpeningDirection = OpeningDirection.Fixed; // Direction d'ouverture des vantaux
+  openingDirection: OpeningDirection = OpeningDirection.Fixed;
   frameService: Frame;
-  selectedShape: Shapes = Shapes.Rectangle;
+  selectedTopShape: Shapes = Shapes.Rectangle;
+  selectedBottomShape: Shapes = Shapes.Rectangle;
   shapeOptions = Object.values(Shapes);
 
   constructor(frameService: Frame) {
@@ -40,29 +43,90 @@ export class ThreeJS {
   }
 
   onDimensionChange() {
-    this.windowGroup && this.scene.remove(this.windowGroup); // Remove the old window group if it exists
+    this.windowGroup && this.scene.remove(this.windowGroup);
     this.buildWindow();
   }
 
   buildWindow() {
     const frames: THREE.Group[] = [];
-    for (let i = 0; i < this.frameNb; i++) {
-      const frame: THREE.Group = this.frameService.buildFrame(
-        this.windowWidth / this.frameNb,
-        this.frameHeight,
+
+    const totalWidth = this.windowWidth;
+    const topHeight = this.topFrameHeight;
+    const bottomHeight = this.frameHeight;
+    const hasTop = this.hasTopFrame;
+
+    for (let i = 0; i < this.bottomFrameNb; i++) {
+      const frame = this.frameService.buildFrame(
+        totalWidth / this.bottomFrameNb,
+        bottomHeight,
         this.frameThickness,
         this.interiorGap,
         this.openingDirection,
         this.horizontalGlazingBarsNb,
         this.verticalGlazingBarsNb,
-        this.selectedShape
+        this.selectedBottomShape
       );
-      frame.position.set((i - (this.frameNb - 1) / 2) * (this.windowWidth / this.frameNb) - (i > 0 ? this.frameThickness * i : 0), 0, 0);
+
+      frame.position.set(
+        (i - (this.bottomFrameNb - 1) / 2) * (totalWidth / this.bottomFrameNb) - (i > 0 ? this.frameThickness * i : 0),
+        bottomHeight / 2, // centre du cadre par rapport à la base
+        0
+      );
+
       frames.push(frame);
     }
+
+    if (hasTop) {
+      const topFrame = this.frameService.buildFrame(
+        totalWidth - (this.bottomFrameNb - 1) * this.frameThickness,
+        topHeight,
+        this.frameThickness,
+        this.interiorGap,
+        this.openingDirection,
+        this.horizontalGlazingBarsNb,
+        this.verticalGlazingBarsNb,
+        this.selectedTopShape
+      );
+
+      topFrame.position.set(
+        -this.frameThickness / 2,
+        bottomHeight + topHeight / 2 - this.frameThickness / 2, // centré par rapport à la base
+        0
+      );
+
+      frames.push(topFrame);
+    }
+
     this.windowGroup = new THREE.Group().add(...frames);
     this.scene.add(this.windowGroup);
-  } 
+    this.fitCameraToObject(this.windowGroup);
+  }
+
+
+  fitCameraToObject(object: THREE.Object3D) {
+    const box = new THREE.Box3().setFromObject(object);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+
+    const margin = 1.3; // 30% de marge
+    const width = size.x * margin;
+    const height = size.y * margin;
+
+    const aspect = window.innerWidth / window.innerHeight;
+    let camWidth = width;
+    let camHeight = height;
+    if (width / height > aspect) {
+      camHeight = width / aspect;
+    } else {
+      camWidth = height * aspect;
+    }
+    this.camera.left = -camWidth / 2;
+    this.camera.right = camWidth / 2;
+    this.camera.top = camHeight;
+    this.camera.bottom = -camHeight;
+    this.camera.position.set(center.x, center.y, this.camera.position.z);
+    this.camera.updateProjectionMatrix();
+  }
 
   init() {
     // Initialize the scene, camera, and renderer

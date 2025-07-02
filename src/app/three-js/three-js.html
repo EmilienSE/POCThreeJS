@@ -1,27 +1,40 @@
 <div style="margin-bottom: 1em; display:flex; flex-direction: row; align-items: center;">
-  <label>Largeur (m) :
-    <input type="number" step="0.1" min="0.1" [(ngModel)]="windowWidth" (input)="onDimensionChange()">
+  <label>L :
+    <input type="number" step="0.1" min="0.1" [(ngModel)]="windowWidth" (input)="onDimensionChange()" style="width:50px">
   </label>
-  <label style="margin-left: 1em;">Hauteur (m) :
-    <input type="number" step="0.1" min="0.1" [(ngModel)]="frameHeight" (input)="onDimensionChange()">
+  <label style="margin-left: 1em;">H partie basse :
+    <input type="number" step="0.1" min="0.1" [(ngModel)]="frameHeight" (input)="onDimensionChange()" style="width:50px">
   </label>
-  <label style="margin-left: 1em;">Nb Vantaux :
-    <input type="number" step="1" min="1" [(ngModel)]="frameNb" (input)="onDimensionChange()">
+  <label style="margin-left: 1em;">H partie haute:
+    <input type="number" step="0.1" min="0.1" [(ngModel)]="topFrameHeight" (input)="onDimensionChange()" style="width:50px">
   </label>
-  <label style="margin-left: 1em;">Nb petits bois horizontaux :
-    <input type="number" step="1" min="0" [(ngModel)]="horizontalGlazingBarsNb" (input)="onDimensionChange()">
+  <label style="margin-left: 1em;">Nb vtx bas :
+    <input type="number" step="1" min="1" [(ngModel)]="bottomFrameNb" (input)="onDimensionChange()" style="width:50px">
   </label>
-  <label style="margin-left: 1em;">Nb petits bois verticaux :
-    <input type="number" step="1" min="0" [(ngModel)]="verticalGlazingBarsNb" (input)="onDimensionChange()">
+  <label style="margin-left: 1em;">Vt haut :
+    <input type="checkbox" [(ngModel)]="hasTopFrame" (change)="onDimensionChange()">
   </label>
-  <label style="margin-left: 1em;" for="selectedShape">Forme :
-      <select name="selectedShape" id="selectedShape" [(ngModel)]="selectedShape" (change)="onDimensionChange()">
+  <label style="margin-left: 1em;">Nb PB horizontaux :
+    <input type="number" step="1" min="0" [(ngModel)]="horizontalGlazingBarsNb" (input)="onDimensionChange()" style="width:50px">
+  </label>
+  <label style="margin-left: 1em;">Nb PB verticaux :
+    <input type="number" step="1" min="0" [(ngModel)]="verticalGlazingBarsNb" (input)="onDimensionChange()" style="width:50px">
+  </label>
+  <label style="margin-left: 1em;" for="selectedShape">Forme haut :
+      <select name="selectedShape" id="selectedShape" [(ngModel)]="selectedTopShape" (change)="onDimensionChange()">
         @for(shape of shapeOptions; track shape) {
-            <option [value]="shape" [selected]="selectedShape === shape">{{shape}}</option>
+            <option [value]="shape" [selected]="selectedTopShape === shape">{{shape}}</option>
         }
       </select>
   </label>
-  <label style="margin-left: 1em;" for="openingDirection">Sens d'ouverture :
+  <label style="margin-left: 1em;" for="selectedShape">Forme bas :
+      <select name="selectedShape" id="selectedShape" [(ngModel)]="selectedBottomShape" (change)="onDimensionChange()">
+        @for(shape of shapeOptions; track shape) {
+            <option [value]="shape" [selected]="selectedBottomShape === shape">{{shape}}</option>
+        }
+      </select>
+  </label>
+  <label style="margin-left: 1em;" for="openingDirection">Ouverture :
       <select name="openingDirection" id="openingDirection" [(ngModel)]="openingDirection" (change)="onDimensionChange()">
         @for(opening of openingDirectionOptions; track opening) {
             <option [value]="opening" [selected]="openingDirection === opening">{{opening}}</option>
