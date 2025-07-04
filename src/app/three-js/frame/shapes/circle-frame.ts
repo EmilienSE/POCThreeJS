@@ -75,7 +75,7 @@ function buildGlass(
   frameGroup: THREE.Group
 ) {
   // Vitre elliptique
-  const glassMaterial = new THREE.ShaderMaterial(GLASS);
+  const glassMaterial = GLASS;
   const glass = new THREE.Mesh(
     new THREE.CircleGeometry(1, 64),
     glassMaterial

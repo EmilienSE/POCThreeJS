@@ -43,7 +43,7 @@ export function createTriangleFrame(
   }
 
   // Ajout de la vitre
-  const glassMaterial = new THREE.ShaderMaterial(GLASS);
+  const glassMaterial = GLASS;
   const glassShape = new THREE.Shape(inner);
   const glassGeometry = new THREE.ShapeGeometry(glassShape);
   const glass = new THREE.Mesh(glassGeometry, glassMaterial);

@@ -94,7 +94,7 @@ export function createTrapezoidFrame(
 
   const glassShape = new THREE.Shape([innerA, innerB, innerC, innerD]);
   const glassGeometry = new THREE.ShapeGeometry(glassShape);
-  const glassMaterial = new THREE.ShaderMaterial(GLASS);
+  const glassMaterial = GLASS;
   const glass = new THREE.Mesh(glassGeometry, glassMaterial);
   glass.position.z = 0.01;
   frameGroup.add(glass);

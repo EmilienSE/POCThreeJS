@@ -106,7 +106,7 @@ function buildGlass(
     frameGroup: THREE.Group
   ) {
     // Vitre
-    const glassMaterial = new THREE.ShaderMaterial(GLASS);
+    const glassMaterial = GLASS;
     const glass = new THREE.Mesh(
       new THREE.PlaneGeometry(frameWidth - 2 * frameThickness, frameHeight - 2 * frameThickness),
       glassMaterial

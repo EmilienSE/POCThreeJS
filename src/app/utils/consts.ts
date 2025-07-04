@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 
 export const WINDOW_WIDTH = 3;
-export const FRAME_HEIGHT = 3;
+export const BOTTOM_FRAME_HEIGHT = 3;
 export const TOP_FRAME_HEIGHT = 1.5;
 export const FRAME_THICKNESS = 0.03;
 export const INTERIOR_GAP = 0.1; // Espace pour les cadres intérieurs
 
-export const GLASS = {
+export const GLASS = new THREE.ShaderMaterial({
   uniforms: {
     color1: { value: new THREE.Color(0xe5f4fd) },
     color2: { value: new THREE.Color(0xf5fbff) }
@@ -28,6 +28,6 @@ export const GLASS = {
     }
   `,
   transparent: false
-}
+});
 
 export const LINE_COLOR = 0x93807b;

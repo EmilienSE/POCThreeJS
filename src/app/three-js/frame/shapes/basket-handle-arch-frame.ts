@@ -113,7 +113,7 @@ function buildGlassBasketHandle(
   frameGroup: THREE.Group,
   frameHeight: number
 ) {
-  const glassMaterial = new THREE.ShaderMaterial(GLASS);
+  const glassMaterial = GLASS;
   const points = getBasketHandlePoints(outerRadiusX - frameThickness, outerRadiusY - frameThickness);
   const shape = new THREE.Shape();
   shape.moveTo(points[0].x, points[0].y);

@@ -107,7 +107,7 @@ function buildGlassHalfMoon(
   frameGroup: THREE.Group,
   frameHeight: number
 ) {
-  const glassMaterial = new THREE.ShaderMaterial(GLASS);
+  const glassMaterial = GLASS;
 
   const shape = new THREE.Shape();
   shape.absellipse(0, 0, outerRadiusX - frameThickness, outerRadiusY - frameThickness, 0, Math.PI, false);
