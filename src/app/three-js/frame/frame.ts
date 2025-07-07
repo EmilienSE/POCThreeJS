@@ -9,6 +9,7 @@ import { createTrapezoidFrame } from './shapes/trapezoid-frame';
 import { createPentagonFrame } from './shapes/pentagon-frame';
 import { createTriangleFrame } from './shapes/triangle-frame';
 import { createBasketHandleArchFrame } from './shapes/basket-handle-arch-frame';
+import { createSegmentTopArchFrame } from './shapes/segment-top-arch-frame';
 
 @Injectable({
   providedIn: 'root'
@@ -100,6 +101,17 @@ export class Frame {
         break;
       case Shapes.BasketHandleArch:
         this.frameGroup = createBasketHandleArchFrame(
+          frameWidth,
+          frameHeight,
+          frameThickness,
+          interiorGap,
+          openingDirection,
+          horGlazingBarsNumber,
+          verGlazingBarsNumber
+        );
+        break;
+      case Shapes.SegmentTopArch:
+        this.frameGroup = createSegmentTopArchFrame(
           frameWidth,
           frameHeight,
           frameThickness,
