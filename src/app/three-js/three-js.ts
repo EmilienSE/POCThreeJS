@@ -34,7 +34,7 @@ export class ThreeJS {
   openingDirection: OpeningDirection = OpeningDirection.Fixed;
   frameService: Frame;
   selectedTopShape: Shapes = Shapes.SegmentTopArch;
-  selectedBottomShape: Shapes = Shapes.SegmentTopArch;
+  selectedBottomShape: Shapes = Shapes.Circle;
   shapeOptions = Object.values(Shapes);
 
   constructor(frameService: Frame) {
@@ -59,11 +59,11 @@ export class ThreeJS {
       const frame = this.frameService.buildFrame(
         totalWidth / this.bottomFrameNb,
         bottomHeight,
-        this.frameThickness,
-        this.interiorGap,
-        this.openingDirection,
-        this.horizontalGlazingBarsNb,
-        this.verticalGlazingBarsNb,
+      this.frameThickness,
+      this.interiorGap,
+      this.openingDirection,
+      this.horizontalGlazingBarsNb,
+      this.verticalGlazingBarsNb,
         this.selectedBottomShape
       );
 
@@ -116,18 +116,21 @@ export class ThreeJS {
 
   init() {
     this.scene = new THREE.Scene();
-    this.camera = new THREE.OrthographicCamera(
-      window.innerWidth / -200, window.innerWidth / 200,
-      window.innerHeight / 200, window.innerHeight / -200,
-      0.1, 1000
-    );
     this.renderer = new THREE.WebGLRenderer({antialias: true});
-    
-    this.renderer.setPixelRatio( window.devicePixelRatio );
+    this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setClearColor(0x000000, 0);
 
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    const height = window.innerHeight;
+    const width = height;
+    this.renderer.setSize(width, height);
     document.body.appendChild(this.renderer.domElement);
+
+    const viewSize = 5; 
+    const left = -viewSize;
+    const right = viewSize;
+    const top = viewSize;
+    const bottom = -viewSize;
+    this.camera = new THREE.OrthographicCamera(left, right, top, bottom, 0.1, 1000);
 
     this.buildWindow();
 
