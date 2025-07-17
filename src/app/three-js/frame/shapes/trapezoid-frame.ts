@@ -63,9 +63,7 @@ export function createTrapezoidFrame(
 
   // Calcul du trapèze intérieur décalé de interiorGap
   const bottomWidthInner = bottomWidth - 2 * interiorGap;
-  const topWidthInner = topWidth - 2 * interiorGap;
   const halfBottomInner = bottomWidthInner / 2;
-  const halfTopInner = topWidthInner / 2;
   const halfHeightInner = halfHeight - interiorGap;
   const A2 = new THREE.Vector2(-halfBottomInner, -halfHeightInner);
   const B2 = new THREE.Vector2(halfBottomInner, -halfHeightInner);
@@ -107,62 +105,15 @@ export function createTrapezoidFrame(
     frameGroup
   );
 
-  buildTrapezoidGlazingBars(
+  buildTrapezoidBars(
     [innerA, innerB, innerC, innerD],
     horGlazingBarsNumber,
     verGlazingBarsNumber,
-    frameGroup
+    stileNb,
+    railNb,
+    frameGroup,
+    frameThickness
   );
-
-  // Ajout des traverses internes (droits, horizontaux) - la traverse ne doit pas dépasser de la forme
-  if (railNb > 0) {
-    const montantMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
-    const horizontalDivisions = railNb + 1;
-    for (let i = 1; i < horizontalDivisions; i++) {
-      const t = i / horizontalDivisions;
-      // Interpolation sur les côtés gauche (A->D) et droit (B->C) pour trouver les points de départ et d'arrivée
-      const start = A.clone().lerp(D, t);
-      const end = B.clone().lerp(C, t);
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(start.x, start.y, 0.05),
-        new THREE.Vector3(end.x, end.y, 0.05)
-      ]);
-      const line = new THREE.Line(geometry, montantMaterial);
-      frameGroup.add(line);
-    }
-  }
-
-  if (stileNb > 0) {
-    const montantMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
-    for (let i = 1; i <= stileNb; i++) {
-      const t = i / (stileNb + 1);
-      // x est interpolé sur la base (A->B)
-      const x = A.x + (B.x - A.x) * t;
-      // Intersection avec la base (y = A.y)
-      const yBottom = A.y;
-      // Intersection avec le haut (y = D.y)
-      // Pour trouver x sur le haut, on doit vérifier si x est entre D.x et C.x
-      const minXTop = Math.min(D.x, C.x);
-      const maxXTop = Math.max(D.x, C.x);
-      let yTop = D.y;
-      const tTop = (x - D.x) / (C.x - D.x);
-      let xTop = D.x + (C.x - D.x) * tTop;
-      if (x < minXTop || x > maxXTop) {
-        const m = (B.y - C.y) / (B.x - C.x);
-        const b = C.y - m * C.x;
-        yTop = m * x + b;
-      }
-
-      // Interpolation linéaire pour trouver x sur le haut
-      // D.x -> C.x correspond à t variant de 0 à 1
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(x, yBottom, 0.05),
-        new THREE.Vector3(xTop, yTop, 0.05)
-      ]);
-      const line = new THREE.Line(geometry, montantMaterial);
-      frameGroup.add(line);
-    }
-  }
 
   return frameGroup;
 }
@@ -246,34 +197,93 @@ function buildTrapezoidOpening(
   });
 }
 
-function buildTrapezoidGlazingBars(
+function buildTrapezoidBars(
   inner: THREE.Vector2[],
   horGlazingBarsNumber: number,
   verGlazingBarsNumber: number,
-  frameGroup: THREE.Group
+  stileNb: number,
+  railNb: number,
+  frameGroup: THREE.Group,
+  frameThickness: number
 ) {
-  const material = new THREE.LineBasicMaterial({ color: LINE_COLOR, linewidth: 1 });
+  const glazingBarMaterial = new THREE.LineBasicMaterial({ color: LINE_COLOR, linewidth: 1 });
+  const barMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: frameThickness });
   const [A, B, C, D] = inner;
+
   // Petits bois horizontaux (interpolation entre les côtés gauches et droits)
   if (horGlazingBarsNumber > 0) {
-    const horizontalDivisions = horGlazingBarsNumber + 1;
-    for (let i = 1; i < horizontalDivisions; i++) {
-      const t = i / horizontalDivisions;
-      // Interpolation sur les côtés gauche (A->D) et droit (B->C) pour trouver les points de départ et d'arrivée
-      const start = A.clone().lerp(D, t);
-      const end = B.clone().lerp(C, t);
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(start.x, start.y, 0.05),
-        new THREE.Vector3(end.x, end.y, 0.05)
-      ]);
-      const line = new THREE.Line(geometry, material);
-      frameGroup.add(line);
-    }
+    const horizontalGlazingBarDivisions = horGlazingBarsNumber + 1;
+    buildHorizontalBars(
+      horizontalGlazingBarDivisions,
+      glazingBarMaterial,
+      frameGroup,
+      A, B, C, D
+    );
   }
+  if(railNb > 0) {
+    const horizontalDivisions = railNb + 1;
+    buildHorizontalBars(
+      horizontalDivisions,
+      barMaterial,
+      frameGroup,
+      A, B, C, D
+    );
+  }
+
   // Petits bois verticaux (interpolation entre haut et bas)
   if (verGlazingBarsNumber > 0) {
-    for (let i = 1; i <= verGlazingBarsNumber; i++) {
-      const t = i / (verGlazingBarsNumber + 1);
+    buildVerticalBars(
+      verGlazingBarsNumber,
+      glazingBarMaterial,
+      frameGroup,
+      A, B, C, D
+    );
+  }
+
+  if (stileNb > 0) {
+    buildVerticalBars(
+      stileNb,
+      barMaterial,
+      frameGroup,
+      A, B, C, D
+    );
+  }
+}
+
+function buildHorizontalBars(
+  divisions: number,
+  material: THREE.Material,
+  frameGroup: THREE.Group,
+  A: THREE.Vector2,
+  B: THREE.Vector2,
+  C: THREE.Vector2,
+  D: THREE.Vector2
+) {
+  for (let i = 1; i < divisions; i++) {
+    const t = i / divisions;
+    // Interpolation sur les côtés gauche (A->D) et droit (B->C) pour trouver les points de départ et d'arrivée
+    const start = A.clone().lerp(D, t);
+    const end = B.clone().lerp(C, t);
+    const geometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(start.x, start.y, 0.05),
+      new THREE.Vector3(end.x, end.y, 0.05)
+    ]);
+    const line = new THREE.Line(geometry, material);
+    frameGroup.add(line);
+  }
+}
+
+function buildVerticalBars(
+  divisions: number,
+  material: THREE.Material,
+  frameGroup: THREE.Group,
+  A: THREE.Vector2,
+  B: THREE.Vector2,
+  C: THREE.Vector2,
+  D: THREE.Vector2
+){
+  for (let i = 1; i <= divisions; i++) {
+      const t = i / (divisions + 1);
       // x est interpolé sur la base (A->B)
       const x = A.x + (B.x - A.x) * t;
       // Intersection avec la base (y = A.y)
@@ -300,5 +310,4 @@ function buildTrapezoidGlazingBars(
       const line = new THREE.Line(geometry, material);
       frameGroup.add(line);
     }
-  }
 }
