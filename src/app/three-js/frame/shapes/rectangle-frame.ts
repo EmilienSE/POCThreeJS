@@ -10,6 +10,8 @@ export function createRectangleFrame(
   openingDirection: OpeningDirection,
   horGlazingBarsNumber: number = 0,
   verGlazingBarsNumber: number = 0,
+  stileNb: number = 0,
+  railNb: number = 0
 ): THREE.Group {
     
   const frameGroup = new THREE.Group();
@@ -95,6 +97,40 @@ export function createRectangleFrame(
     frame.position.set(...position);
     frameGroup.add(frame);
   });
+
+  // Ajout des montants verticaux pour divisions internes
+  if (stileNb > 0) {
+    const montantMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const montantWidth = frameThickness;
+    const montantHeight = frameHeight - 2 * frameThickness;
+    let verticalDivisions = stileNb + 1;
+    for (let i = 1; i < verticalDivisions; i++) {
+      const x = -frameWidth / 2 + (i * frameWidth) / verticalDivisions;
+      const montant = new THREE.Mesh(
+        new THREE.PlaneGeometry(montantWidth, montantHeight),
+        montantMaterial
+      );
+      montant.position.set(x, 0, 0.05);
+      frameGroup.add(montant);
+    }
+  }
+
+  // Ajout des traverses horizontales pour divisions internes
+  if (railNb > 0) {
+    const traverseMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const traverseHeight = frameThickness;
+    const traverseWidth = frameWidth - 2 * frameThickness;
+    let horizontalDivisions = railNb + 1;
+    for (let i = 1; i < horizontalDivisions; i++) {
+      const y = -frameHeight / 2 + (i * frameHeight) / horizontalDivisions;
+      const traverse = new THREE.Mesh(
+        new THREE.PlaneGeometry(traverseWidth, traverseHeight),
+        traverseMaterial
+      );
+      traverse.position.set(0, y, 0.05);
+      frameGroup.add(traverse);
+    }
+  }
 
   return frameGroup;
 }

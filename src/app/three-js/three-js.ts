@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import * as THREE from 'three';
 import { OpeningDirection } from '../utils/opening-direction.enum';
-import { FRAME_THICKNESS, WINDOW_WIDTH, INTERIOR_GAP, TOP_FRAME_HEIGHT, BOTTOM_FRAME_HEIGHT } from '../utils/consts';
+import { FRAME_THICKNESS, WINDOW_WIDTH, INTERIOR_GAP, TOP_FRAME_HEIGHT, BOTTOM_FRAME_HEIGHT, LOW_HEIGHT } from '../utils/consts';
 import { Frame } from './frame/frame';
 import { Shapes } from '../utils/shapes';
 
@@ -22,6 +22,7 @@ export class ThreeJS {
   windowWidth = WINDOW_WIDTH;
   bottomFrameHeight = BOTTOM_FRAME_HEIGHT;
   topFrameHeight = TOP_FRAME_HEIGHT;
+  lowHeight = LOW_HEIGHT;
   frameThickness = FRAME_THICKNESS;
   interiorGap = INTERIOR_GAP;
 
@@ -29,12 +30,14 @@ export class ThreeJS {
   hasTopFrame = false; 
   horizontalGlazingBarsNb = 0;
   verticalGlazingBarsNb = 0;
+  railNb = 0;
+  stileNb = 1;
   
   openingDirectionOptions = Object.values(OpeningDirection);
-  openingDirection: OpeningDirection = OpeningDirection.Fixed;
+  openingDirection: OpeningDirection = OpeningDirection.Up;
   frameService: Frame;
   selectedTopShape: Shapes = Shapes.SegmentTopArch;
-  selectedBottomShape: Shapes = Shapes.Circle;
+  selectedBottomShape: Shapes = Shapes.Triangle;
   shapeOptions = Object.values(Shapes);
 
   constructor(frameService: Frame) {
@@ -59,12 +62,15 @@ export class ThreeJS {
       const frame = this.frameService.buildFrame(
         totalWidth / this.bottomFrameNb,
         bottomHeight,
-      this.frameThickness,
-      this.interiorGap,
-      this.openingDirection,
-      this.horizontalGlazingBarsNb,
-      this.verticalGlazingBarsNb,
-        this.selectedBottomShape
+        this.lowHeight,
+        this.frameThickness,
+        this.interiorGap,
+        this.openingDirection,
+        this.horizontalGlazingBarsNb,
+        this.verticalGlazingBarsNb,
+        this.selectedBottomShape,
+        this.stileNb,
+        this.railNb
       );
 
       frame.position.set(
@@ -80,6 +86,7 @@ export class ThreeJS {
       const topFrame = this.frameService.buildFrame(
         totalWidth - (this.bottomFrameNb - 1) * this.frameThickness,
         topHeight,
+        this.lowHeight,
         this.frameThickness,
         this.interiorGap,
         this.openingDirection,

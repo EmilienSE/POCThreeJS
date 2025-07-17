@@ -10,6 +10,8 @@ export function createBasketHandleArchFrame(
   openingDirection: OpeningDirection,
   horGlazingBarsNumber: number = 0,
   verGlazingBarsNumber: number = 0,
+  stileNb: number = 0,
+  railNb: number = 0,
 ): THREE.Group {
   const frameGroup = new THREE.Group();
 
@@ -83,6 +85,108 @@ export function createBasketHandleArchFrame(
   //   verGlazingBarsNumber,
   //   frameGroup
   // );
+
+  
+  if(railNb > 0) {
+    const railMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+    const baseY = -frameHeight / 2;
+    const outerPoints = getBasketHandlePoints(
+      frameWidth / 2 - frameThickness,
+      frameHeight - frameThickness
+    );
+
+    // y max de la courbe (le sommet)
+    const yMax = Math.max(...outerPoints.map(p => p.y));
+
+    // On crée une fonction inverse pour la courbe : pour une Y donnée, on cherche x gauche et droit
+    // La courbe est symétrique donc on peut chercher les intersections sur x<0 et déduire x>0
+    function findXAtY(yTarget: number) {
+      let xLeft = null;
+      let xRight = null;
+
+      for (let i = 0; i < outerPoints.length - 1; i++) {
+        const p1 = outerPoints[i];
+        const p2 = outerPoints[i + 1];
+
+        // Vérifier si yTarget est entre p1.y et p2.y
+        if ((p1.y <= yTarget && yTarget <= p2.y) || (p2.y <= yTarget && yTarget <= p1.y)) {
+          const ratio = (yTarget - p1.y) / (p2.y - p1.y);
+          const xAtY = p1.x + ratio * (p2.x - p1.x);
+
+          if (xAtY < 0) xLeft = xAtY;
+          else xRight = xAtY;
+
+          // Dès qu’on a trouvé les deux cotés on peut sortir
+          if (xLeft !== null && xRight !== null) break;
+        }
+      }
+
+      // Si on a pas trouvé un des côtés (bord cases)
+      if (xLeft === null) xLeft = - (frameWidth / 2 - frameThickness);
+      if (xRight === null) xRight = frameWidth / 2 - frameThickness;
+
+      return { xLeft, xRight };
+    }
+
+    // Créer les rails
+    for (let i = 1; i <= railNb; i++) {
+      const t = i / (railNb + 1);
+      const yRailLocal = t * yMax;
+      const yRail = baseY + yRailLocal;
+
+      const { xLeft, xRight } = findXAtY(yRailLocal);
+
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(xLeft, yRail, 0.05),
+        new THREE.Vector3(xRight, yRail, 0.05),
+      ]);
+
+      const line = new THREE.Line(geometry, railMaterial);
+      frameGroup.add(line);
+    }
+  }
+
+  // Ajout des montants internes (interpolation entre la base et la courbe)
+  if (stileNb > 0) {
+    const montantMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+    const baseY = -frameHeight / 2;
+
+    const usableWidth = frameWidth - 2 * frameThickness;
+    const outerPoints = getBasketHandlePoints(
+      frameWidth / 2 - frameThickness,
+      frameHeight - frameThickness
+    );
+
+    // Évite les bords : on divise en stileNb + 1 intervalles, et on saute les extrémités
+    for (let i = 1; i <= stileNb; i++) {
+      const t = i / (stileNb + 1); // jamais 0 ni 1
+      const xBase = -usableWidth / 2 + t * usableWidth;
+
+      // Interpolation linéaire sur la courbe pour trouver y
+      let yTop = null;
+      for (let j = 0; j < outerPoints.length - 1; j++) {
+        const p1 = outerPoints[j];
+        const p2 = outerPoints[j + 1];
+
+        if ((p1.x <= xBase && xBase <= p2.x) || (p2.x <= xBase && xBase <= p1.x)) {
+          const ratio = (xBase - p1.x) / (p2.x - p1.x);
+          yTop = p1.y + ratio * (p2.y - p1.y);
+          break;
+        }
+      }
+
+      if (yTop !== null) {
+        const geometry = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(xBase, baseY, 0.05),
+          new THREE.Vector3(xBase, baseY + yTop, 0.05),
+        ]);
+        const line = new THREE.Line(geometry, montantMaterial);
+        frameGroup.add(line);
+      } else {
+        console.warn(`xBase=${xBase.toFixed(2)} pas trouvé sur la courbe`);
+      }
+    }
+  }
 
   return frameGroup;
 }

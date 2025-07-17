@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 
 export const WINDOW_WIDTH = 3;
-export const BOTTOM_FRAME_HEIGHT = 3;
+export const BOTTOM_FRAME_HEIGHT = 4.5;
 export const TOP_FRAME_HEIGHT = 1.5;
+export const LOW_HEIGHT = 1;
 export const FRAME_THICKNESS = 0.03;
-export const INTERIOR_GAP = 0.1; // Espace pour les cadres intérieurs
+export const INTERIOR_GAP = 0.1;
 
 export const GLASS = new THREE.ShaderMaterial({
   uniforms: {

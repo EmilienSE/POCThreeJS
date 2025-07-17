@@ -20,6 +20,12 @@
   <label style="margin-left: 1em;">Nb PB verticaux :
     <input type="number" step="1" min="0" [(ngModel)]="verticalGlazingBarsNb" (input)="onDimensionChange()" style="width:50px">
   </label>
+  <label style="margin-left: 1em;">Nb traverses :
+    <input type="number" step="1" min="0" [(ngModel)]="railNb" (input)="onDimensionChange()" style="width:50px">
+  </label>
+  <label style="margin-left: 1em;">Nb montants :
+    <input type="number" step="1" min="0" [(ngModel)]="stileNb" (input)="onDimensionChange()" style="width:50px">
+  </label>
   <label style="margin-left: 1em;" for="selectedShape">Forme haut :
       <select name="selectedShape" id="selectedShape" [(ngModel)]="selectedTopShape" (change)="onDimensionChange()">
         @for(shape of shapeOptions; track shape) {

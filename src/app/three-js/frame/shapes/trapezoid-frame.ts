@@ -10,21 +10,23 @@ export function createTrapezoidFrame(
   openingDirection: OpeningDirection,
   horGlazingBarsNumber: number = 0,
   verGlazingBarsNumber: number = 0,
-  topWidthRatio: number = 0.6
+  lowHeight: number,
+  stileNb: number = 0,
+  railNb: number = 0
 ): THREE.Group {
   const frameGroup = new THREE.Group();
   const frameMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
   const bottomWidth = frameWidth;
-  const topWidth = frameWidth * topWidthRatio;
+  const topWidth = lowHeight;
   const halfHeight = frameHeight / 2;
   const halfBottom = bottomWidth / 2;
-  const halfTop = topWidth / 2;
 
-  const A = new THREE.Vector2(-halfBottom, -halfHeight);
-  const B = new THREE.Vector2(halfBottom, -halfHeight);
-  const C = new THREE.Vector2(halfTop, halfHeight);
-  const D = new THREE.Vector2(-halfTop, halfHeight);
+  // Pour trapèze rectangle : A(0,0), B(bottomWidth,0), D(0,frameHeight), C(topWidth,frameHeight)
+  const A = new THREE.Vector2(-halfBottom, -halfHeight); // Bas-gauche
+  const B = new THREE.Vector2(halfBottom, -halfHeight);  // Bas-droite
+  const C = new THREE.Vector2(-halfBottom + topWidth, halfHeight); // Haut-droite (décalé sur X)
+  const D = new THREE.Vector2(-halfBottom, halfHeight);  // Haut-gauche
 
   function offsetPoint(p: THREE.Vector2, prev: THREE.Vector2, next: THREE.Vector2, thickness: number): THREE.Vector2 {
     const v1 = new THREE.Vector2().subVectors(p, prev).normalize();
@@ -67,8 +69,8 @@ export function createTrapezoidFrame(
   const halfHeightInner = halfHeight - interiorGap;
   const A2 = new THREE.Vector2(-halfBottomInner, -halfHeightInner);
   const B2 = new THREE.Vector2(halfBottomInner, -halfHeightInner);
-  const C2 = new THREE.Vector2(halfTopInner, halfHeightInner);
-  const D2 = new THREE.Vector2(-halfTopInner, halfHeightInner);
+  const C2 = new THREE.Vector2(-halfBottomInner + topWidth - interiorGap*2, halfHeightInner);
+  const D2 = new THREE.Vector2(-halfBottomInner, halfHeightInner);
 
   // On applique le même offset pour l'épaisseur du cadre intérieur
   const innerA2 = offsetPoint(A2, D2, B2, frameThickness / 2);
@@ -111,6 +113,56 @@ export function createTrapezoidFrame(
     verGlazingBarsNumber,
     frameGroup
   );
+
+  // Ajout des traverses internes (droits, horizontaux) - la traverse ne doit pas dépasser de la forme
+  if (railNb > 0) {
+    const montantMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+    const horizontalDivisions = railNb + 1;
+    for (let i = 1; i < horizontalDivisions; i++) {
+      const t = i / horizontalDivisions;
+      // Interpolation sur les côtés gauche (A->D) et droit (B->C) pour trouver les points de départ et d'arrivée
+      const start = A.clone().lerp(D, t);
+      const end = B.clone().lerp(C, t);
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(start.x, start.y, 0.05),
+        new THREE.Vector3(end.x, end.y, 0.05)
+      ]);
+      const line = new THREE.Line(geometry, montantMaterial);
+      frameGroup.add(line);
+    }
+  }
+
+  if (stileNb > 0) {
+    const montantMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+    for (let i = 1; i <= stileNb; i++) {
+      const t = i / (stileNb + 1);
+      // x est interpolé sur la base (A->B)
+      const x = A.x + (B.x - A.x) * t;
+      // Intersection avec la base (y = A.y)
+      const yBottom = A.y;
+      // Intersection avec le haut (y = D.y)
+      // Pour trouver x sur le haut, on doit vérifier si x est entre D.x et C.x
+      const minXTop = Math.min(D.x, C.x);
+      const maxXTop = Math.max(D.x, C.x);
+      let yTop = D.y;
+      const tTop = (x - D.x) / (C.x - D.x);
+      let xTop = D.x + (C.x - D.x) * tTop;
+      if (x < minXTop || x > maxXTop) {
+        const m = (B.y - C.y) / (B.x - C.x);
+        const b = C.y - m * C.x;
+        yTop = m * x + b;
+      }
+
+      // Interpolation linéaire pour trouver x sur le haut
+      // D.x -> C.x correspond à t variant de 0 à 1
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(x, yBottom, 0.05),
+        new THREE.Vector3(xTop, yTop, 0.05)
+      ]);
+      const line = new THREE.Line(geometry, montantMaterial);
+      frameGroup.add(line);
+    }
+  }
 
   return frameGroup;
 }

@@ -23,12 +23,15 @@ export class Frame {
   buildFrame(
     frameWidth: number,
     frameHeight: number,
+    lowHeight: number,
     frameThickness: number,
     interiorGap: number,
     openingDirection: OpeningDirection,
     horGlazingBarsNumber: number = 0,
     verGlazingBarsNumber: number = 0,
-    shape: Shapes
+    shape: Shapes,
+    stileNb: number = 0,
+    railNb: number = 0
   ): THREE.Group {
 
     switch (shape) {
@@ -40,7 +43,9 @@ export class Frame {
           interiorGap,
           openingDirection,
           horGlazingBarsNumber,
-          verGlazingBarsNumber
+          verGlazingBarsNumber,
+          stileNb,
+          railNb
         )
         break;
       case Shapes.Circle:
@@ -51,7 +56,9 @@ export class Frame {
           interiorGap,
           openingDirection,
           horGlazingBarsNumber,
-          verGlazingBarsNumber
+          verGlazingBarsNumber,
+          stileNb,
+          railNb
         )
         break;
       case Shapes.HalfMoon:
@@ -62,7 +69,9 @@ export class Frame {
           interiorGap,
           openingDirection,
           horGlazingBarsNumber,
-          verGlazingBarsNumber
+          verGlazingBarsNumber,
+          stileNb,
+          railNb
         );
         break;
       case Shapes.Trapezoid:
@@ -74,7 +83,9 @@ export class Frame {
           openingDirection,
           horGlazingBarsNumber,
           verGlazingBarsNumber,
-          0.8 // ratio de la longueur du haut par rapport au bas
+          lowHeight, // ratio de la longueur du haut par rapport au bas
+          stileNb,
+          railNb
         );
         break;
       case Shapes.Pentagon:
@@ -86,6 +97,9 @@ export class Frame {
           openingDirection,
           horGlazingBarsNumber,
           verGlazingBarsNumber,
+          stileNb,
+          railNb,
+          lowHeight
         );
         break;
       case Shapes.Triangle:
@@ -96,7 +110,9 @@ export class Frame {
           interiorGap,
           openingDirection,
           horGlazingBarsNumber,
-          verGlazingBarsNumber
+          verGlazingBarsNumber,
+          stileNb,
+          railNb
         );
         break;
       case Shapes.BasketHandleArch:
@@ -107,7 +123,9 @@ export class Frame {
           interiorGap,
           openingDirection,
           horGlazingBarsNumber,
-          verGlazingBarsNumber
+          verGlazingBarsNumber,
+          stileNb,
+          railNb
         );
         break;
       case Shapes.SegmentTopArch:
@@ -118,7 +136,9 @@ export class Frame {
           interiorGap,
           openingDirection,
           horGlazingBarsNumber,
-          verGlazingBarsNumber
+          verGlazingBarsNumber,
+          stileNb,
+          railNb
         );
         break;
     }
