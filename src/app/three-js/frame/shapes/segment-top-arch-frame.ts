@@ -21,8 +21,6 @@ export function createSegmentTopArchFrame(
 
   const outerRadiusX = frameWidth - frameThickness;
   const outerRadiusY = frameHeight;
-  const innerRadiusX = outerRadiusX - interiorGap;
-  const innerRadiusY = outerRadiusY - interiorGap;
 
   const frameMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
 
@@ -40,23 +38,21 @@ export function createSegmentTopArchFrame(
   outerShape.lineTo(outerRadiusX * Math.cos(startAngle), 0);
   outerShape.closePath();
 
-  const holePath = new THREE.Path();
-  holePath.absellipse(0, 0, innerRadiusX, innerRadiusY, startAngle, endAngle, false);
-  holePath.lineTo(innerRadiusX * Math.cos(endAngle), 0);
-  holePath.lineTo(innerRadiusX * Math.cos(startAngle), 0);
-  holePath.closePath();
-  outerShape.holes.push(holePath);
-
   const shapeGeometry = new THREE.ShapeGeometry(outerShape, 64);
   const archMesh = new THREE.Mesh(shapeGeometry, frameMaterial);
   archMesh.position.y = -frameHeight / 2;
   frameGroup.add(archMesh);
 
   if (openingDirection !== OpeningDirection.Fixed) {
-    const points = [];
+    const points: THREE.Vector3[] = [];
+    const innerRadiusX = outerRadiusX - interiorGap;
+    const innerRadiusY = outerRadiusY - interiorGap;
+    const innerStartAngle = startAngle + frameThickness / 2;
+    const innerEndAngle = endAngle - frameThickness / 2;
+
     for (let i = 0; i <= 64; i++) {
       const t = i / 64;
-      const angle = startAngle + (endAngle - startAngle) * t;
+      const angle = innerStartAngle + (innerEndAngle - innerStartAngle) * t;
       const x = innerRadiusX * Math.cos(angle);
       const y = innerRadiusY * Math.sin(angle);
       points.push(new THREE.Vector3(x, y, 0.1));
@@ -67,7 +63,28 @@ export function createSegmentTopArchFrame(
     const tubeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
     tube.position.y = -frameHeight / 2;
-    frameGroup.add(tube);
+
+    const bottomFrameWidth = frameWidth - interiorGap * 2 + frameThickness;
+    const innerBottomFrame = new THREE.Mesh(
+      new THREE.PlaneGeometry(bottomFrameWidth, frameThickness),
+      frameMaterial
+    );
+    innerBottomFrame.position.set(0, -frameHeight / 2 + frameThickness / 2 + interiorGap, 0.02);
+
+    const verticalFrameHeight = tubeGeometry.parameters.path.getPoint(0).y - interiorGap;
+    const innerLeftFrame = new THREE.Mesh(
+      new THREE.PlaneGeometry(frameThickness, verticalFrameHeight),
+      frameMaterial
+    );
+    innerLeftFrame.position.set(-frameWidth / 2 + interiorGap, -frameHeight / 2 + interiorGap + verticalFrameHeight / 2 + frameThickness / 2, 0.02);
+
+    const innerRightFrame = new THREE.Mesh(
+      new THREE.PlaneGeometry(frameThickness, verticalFrameHeight),
+      frameMaterial
+    );
+    innerRightFrame.position.set(frameWidth / 2 - interiorGap, -frameHeight / 2 + interiorGap + verticalFrameHeight / 2 + frameThickness / 2, 0.02);
+
+    frameGroup.add(tube, innerBottomFrame, innerLeftFrame, innerRightFrame);
   }
 
   buildGlassSegmentTopArch(
@@ -248,12 +265,12 @@ function buildOpeningSegmentTopArch(
 
   const rInnerX = frameWidth / 2 - frameThickness - interiorGap;
   const rInnerY = frameHeight - frameThickness - interiorGap;
-  const spread = (endAngle - startAngle) / 6;
+  const spread = (endAngle - startAngle) / 2;
   const angleConverge = (startAngle + endAngle) / 2;
   const angle1 = angleConverge - spread;
   const angle2 = angleConverge + spread;
 
-  const baseY = -rInnerY / 1000;
+  const baseY = -rInnerY / 1000 + interiorGap;
   const start1 = new THREE.Vector3(rInnerX * Math.cos(angle1), baseY, 0.03);
   const start2 = new THREE.Vector3(rInnerX * Math.cos(angle2), baseY, 0.03);
   const converge = new THREE.Vector3(rInnerX * Math.cos(angleConverge), rInnerY * Math.sin(angleConverge), 0.03);
