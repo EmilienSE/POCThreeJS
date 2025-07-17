@@ -158,7 +158,7 @@ function buildOpening(
   frameHeight: number
 ) {
   const dashMaterial = new THREE.LineDashedMaterial({ color: LINE_COLOR, dashSize: 0.05, gapSize: 0.05 });
-  const solidMaterial = new THREE.LineBasicMaterial({ color: LINE_COLOR });
+  const solidMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
 
   const [A, B, C] = inner;
 
@@ -174,9 +174,9 @@ function buildOpening(
     new THREE.Vector2(C.x, C.y),
     new THREE.Vector2(A.x, A.y)
   ]);
-  const b1 = new THREE.Line(border1, dashMaterial);
-  const b2 = new THREE.Line(border2, dashMaterial);
-  const b3 = new THREE.Line(border3, dashMaterial);
+  const b1 = new THREE.Line(border1, solidMaterial);
+  const b2 = new THREE.Line(border2, solidMaterial);
+  const b3 = new THREE.Line(border3, solidMaterial);
   b1.computeLineDistances();
   b2.computeLineDistances();
   b3.computeLineDistances();

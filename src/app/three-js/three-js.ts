@@ -28,16 +28,16 @@ export class ThreeJS {
 
   bottomFrameNb = 1;
   hasTopFrame = false; 
-  horizontalGlazingBarsNb = 0;
-  verticalGlazingBarsNb = 0;
+  horizontalGlazingBarsNb = 2;
+  verticalGlazingBarsNb = 1;
   railNb = 0;
-  stileNb = 1;
+  stileNb = 0;
   
   openingDirectionOptions = Object.values(OpeningDirection);
-  openingDirection: OpeningDirection = OpeningDirection.Up;
+  openingDirection: OpeningDirection = OpeningDirection.Left;
   frameService: Frame;
   selectedTopShape: Shapes = Shapes.SegmentTopArch;
-  selectedBottomShape: Shapes = Shapes.Triangle;
+  selectedBottomShape: Shapes = Shapes.Trapezoid;
   shapeOptions = Object.values(Shapes);
 
   constructor(frameService: Frame) {
