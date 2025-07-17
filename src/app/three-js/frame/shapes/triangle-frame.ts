@@ -75,7 +75,7 @@ export function createTriangleFrame(
   const frameGroup = new THREE.Group();
   const frameMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
-    // Sommets extérieurs
+  // Sommets extérieurs
   const outer = getTriangleVertices(frameWidth, frameHeight);
   // Sommets intérieurs
   const inner = offsetTriangle(outer, frameThickness);
@@ -99,54 +99,23 @@ export function createTriangleFrame(
   glass.position.z = 0.00;
   frameGroup.add(glass);
 
-  // Ajout des traverses horizontales
-  if (railNb > 0) {
-    const railMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
-    const [A, B, C] = inner; // A = bas-gauche, B = haut, C = bas-droit
-    for (let i = 1; i <= railNb; i++) {
-      const t = i / (railNb + 1);
-      // Interpolation entre les côtés gauche (A-B) et droit (C-B)
-      const leftPoint = A.clone().lerp(B, t);
-      const rightPoint = C.clone().lerp(B, t);
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(leftPoint.x, leftPoint.y, 0.05),
-        new THREE.Vector3(rightPoint.x, rightPoint.y, 0.05)
-      ]);
-      const line = new THREE.Line(geometry, railMaterial);
-      frameGroup.add(line);
-    }
-  }
-
-  // Ajout des montants verticaux
-    if (stileNb > 0) {
-    const montantMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
-    const [p1, p2, p3] = inner; // p1: bas gauche, p2: sommet, p3: bas droit
-
-    for (let i = 1; i <= stileNb; i++) {
-      const t = i / (stileNb + 1);
-      const x = THREE.MathUtils.lerp(p1.x, p3.x, t);
-      const yBottom = p1.y;
-
-      // Intersection avec l’hypoténuse (p2 → p3)
-      const m = (p3.y - p2.y) / (p3.x - p2.x);
-      const yTop = m * (x - p2.x) + p2.y;
-
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(x, yBottom, 0.05),
-        new THREE.Vector3(x, yTop, 0.05)
-      ]);
-      const line = new THREE.Line(geometry, montantMaterial);
-      frameGroup.add(line);
-    }
-  }
   if(openingDirection !== OpeningDirection.Fixed) {
     buildOpening(
       innerFrame,
       openingDirection,
-      frameGroup,
-      frameHeight
+      frameGroup
     );
   }
+
+  buildBars(
+    innerFrame,
+    horGlazingBarsNumber,
+    verGlazingBarsNumber,
+    stileNb,
+    railNb,
+    frameGroup,
+    frameThickness
+  )
 
   return frameGroup;
 }
@@ -154,8 +123,7 @@ export function createTriangleFrame(
 function buildOpening(
   inner: THREE.Vector2[],
   openingDirection: OpeningDirection,
-  frameGroup: THREE.Group,
-  frameHeight: number
+  frameGroup: THREE.Group
 ) {
   const dashMaterial = new THREE.LineDashedMaterial({ color: LINE_COLOR, dashSize: 0.05, gapSize: 0.05 });
   const solidMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
@@ -272,3 +240,53 @@ function buildOpening(
   }
 }
 
+function buildBars(
+  inner: THREE.Vector2[],
+  horGlazingBarsNumber: number = 0,
+  verGlazingBarsNumber: number = 0,
+  stileNb: number = 0,
+  railNb: number = 0,
+  frameGroup: THREE.Group,
+  frameThickness: number
+) { 
+  const BAR_Z = 0.05;
+  const GLAZING_Z = 0.04; // petits bois en dessous
+  const [A, B, C] = inner; // A = bas-gauche, B = haut, C = bas-droit
+  const [p1, p2, p3] = inner; // p1 = bas gauche, p2 = sommet, p3 = bas droit
+
+  const barMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: frameThickness });
+  const glazingBarMaterial = new THREE.LineBasicMaterial({ color: LINE_COLOR });
+
+  function addHorizontalBars(count: number, material: THREE.Material, z: number) {
+    for (let i = 1; i <= count; i++) {
+      const t = i / (count + 1);
+      const left = A.clone().lerp(B, t);
+      const right = C.clone().lerp(B, t);
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(left.x, left.y, z),
+        new THREE.Vector3(right.x, right.y, z)
+      ]);
+      frameGroup.add(new THREE.Line(geometry, material));
+    }
+  }
+
+  function addVerticalBars(count: number, material: THREE.Material, z: number) {
+    const slope = (p3.y - p2.y) / (p3.x - p2.x);
+    for (let i = 1; i <= count; i++) {
+      const t = i / (count + 1);
+      const x = THREE.MathUtils.lerp(p1.x, p3.x, t);
+      const yBottom = p1.y;
+      const yTop = slope * (x - p2.x) + p2.y;
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(x, yBottom, z),
+        new THREE.Vector3(x, yTop, z)
+      ]);
+      frameGroup.add(new THREE.Line(geometry, material));
+    }
+  }
+
+  if (horGlazingBarsNumber > 0) addHorizontalBars(horGlazingBarsNumber, glazingBarMaterial, GLAZING_Z);
+  if (verGlazingBarsNumber > 0) addVerticalBars(verGlazingBarsNumber, glazingBarMaterial, GLAZING_Z);
+  if (railNb > 0) addHorizontalBars(railNb, barMaterial, BAR_Z);
+  if (stileNb > 0) addVerticalBars(stileNb, barMaterial, BAR_Z);
+}

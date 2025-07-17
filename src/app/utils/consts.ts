@@ -9,8 +9,7 @@ export const INTERIOR_GAP = 0.1;
 
 export const GLASS = new THREE.ShaderMaterial({
   uniforms: {
-    color1: { value: new THREE.Color(0xe5f4fd) },
-    color2: { value: new THREE.Color(0xf5fbff) }
+    color: { value: new THREE.Color(0xe5f4fd) }
   },
   vertexShader: `
     varying vec2 vUv;
@@ -20,15 +19,14 @@ export const GLASS = new THREE.ShaderMaterial({
     }
   `,
   fragmentShader: `
-    uniform vec3 color1;
-    uniform vec3 color2;
+    uniform vec3 color;
     varying vec2 vUv;
     void main() {
-      vec3 color = mix(color1, color2, vUv.y); // dégradé vertical
-      gl_FragColor = vec4(color, 1.0);
+      gl_FragColor = vec4(color, 1.0); // couleur uniforme
     }
   `,
   transparent: false
 });
+
 
 export const LINE_COLOR = 0x93807b;
