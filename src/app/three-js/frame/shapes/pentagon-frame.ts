@@ -90,80 +90,15 @@ export function createPentagonFrame(
     frameGroup
   );
 
-  const material = new THREE.LineBasicMaterial({ color: 0x000000 });
-
-  const [p1, p2, p3, p4, p5] = outer;
-
-  if (railNb > 0) {
-    // Déterminer les bornes verticales
-    const yMin = Math.min(...outer.map(v => v.y));
-    const yMax = Math.max(...outer.map(v => v.y));
-
-    // Construire les segments du contour (chaîne fermée)
-    const segments = [];
-    for (let i = 0; i < outer.length; i++) {
-      const a = outer[i];
-      const b = outer[(i + 1) % outer.length];
-      segments.push([a, b]);
-    }
-
-    // Générer les rails
-    for (let i = 1; i <= railNb; i++) {
-      const t = i / (railNb + 1);
-      const y = yMin + (yMax - yMin) * t;
-
-      const intersections: THREE.Vector2[] = [];
-
-      for (const [a, b] of segments) {
-        // Si le segment croise la ligne y
-        if ((a.y <= y && b.y >= y) || (a.y >= y && b.y <= y)) {
-          if (a.y === b.y) continue; // horizontal => ignorer
-
-          const tSeg = (y - a.y) / (b.y - a.y);
-          const x = a.x + (b.x - a.x) * tSeg;
-          intersections.push(new THREE.Vector2(x, y));
-        }
-      }
-
-      if (intersections.length >= 2) {
-        // Trier pour avoir le segment le plus long dans la forme
-        intersections.sort((p1, p2) => p1.x - p2.x);
-        const left = intersections[0];
-        const right = intersections[intersections.length - 1];
-
-        const geometry = new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(left.x, left.y, 0.05),
-          new THREE.Vector3(right.x, right.y, 0.05)
-        ]);
-        const line = new THREE.Line(geometry, material);
-        frameGroup.add(line);
-      }
-    }
-  }
-
-  if (stileNb > 0) {
-    for (let i = 1; i <= stileNb; i++) {
-      const t = i / (stileNb + 1);
-      const base = p1.clone().lerp(p2, t); // base horizontale
-
-      // Interpoler dans le haut en 2 segments : p5 -> p4 et p4 -> p3
-      let top: THREE.Vector2;
-      if (t < 0.5) {
-        const tTop = t / 0.5;
-        top = p5.clone().lerp(p4, tTop);
-      } else {
-        const tTop = (t - 0.5) / 0.5;
-        top = p4.clone().lerp(p3, tTop);
-      }
-
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(base.x, base.y, 0.05),
-        new THREE.Vector3(top.x, top.y, 0.05),
-      ]);
-      const line = new THREE.Line(geometry, material);
-      frameGroup.add(line);
-    }
-  }
+  buildBars(
+    outer,
+    frameGroup,
+    horGlazingBarsNumber,
+    verGlazingBarsNumber,
+    stileNb,
+    railNb,
+    frameThickness
+  );
 
   return frameGroup;
 }
@@ -241,4 +176,80 @@ function buildOpening(
     line.computeLineDistances();
     frameGroup.add(line);
   });
+}
+
+function buildBars(
+  outer: THREE.Vector2[],
+  frameGroup: THREE.Group,
+  horGlazingBarsNumber: number,
+  verGlazingBarsNumber: number,
+  stileNb: number,
+  railNb: number,
+  frameThickness: number
+) {
+  const glazingBarMaterial = new THREE.LineBasicMaterial({ color: LINE_COLOR, linewidth: 1 });
+  const barMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: frameThickness });
+
+  const [p1, p2, p3, p4, p5] = outer;
+  const yMin = Math.min(...outer.map(v => v.y));
+  const yMax = Math.max(...outer.map(v => v.y));
+  const contourSegments = buildContourSegments(outer);
+
+  function buildContourSegments(points: THREE.Vector2[]) {
+    return points.map((a, i) => [a, points[(i + 1) % points.length]] as [THREE.Vector2, THREE.Vector2]);
+  }
+
+  function getIntersectionsAtY(y: number, segments: [THREE.Vector2, THREE.Vector2][]) {
+    return segments
+      .filter(([a, b]) => (a.y <= y && b.y >= y) || (a.y >= y && b.y <= y))
+      .filter(([a, b]) => a.y !== b.y)
+      .map(([a, b]) => {
+        const t = (y - a.y) / (b.y - a.y);
+        const x = a.x + (b.x - a.x) * t;
+        return new THREE.Vector2(x, y);
+      })
+      .sort((p1, p2) => p1.x - p2.x);
+  }
+
+  function drawHorizontalBars(count: number, material: THREE.Material) {
+    for (let i = 1; i <= count; i++) {
+      const y = yMin + ((yMax - yMin) * i) / (count + 1);
+      const intersections = getIntersectionsAtY(y, contourSegments);
+
+      if (intersections.length >= 2) {
+        const left = intersections[0];
+        const right = intersections[intersections.length - 1];
+        drawLine(left, right, material);
+      }
+    }
+  }
+
+  function drawVerticalBars(count: number, material: THREE.Material) {
+    for (let i = 1; i <= count; i++) {
+      const t = i / (count + 1);
+      const base = p1.clone().lerp(p2, t);
+      let top: THREE.Vector2;
+
+      if (t < 0.5) {
+        top = p5.clone().lerp(p4, t / 0.5);
+      } else {
+        top = p4.clone().lerp(p3, (t - 0.5) / 0.5);
+      }
+
+      drawLine(base, top, material);
+    }
+  }
+
+  function drawLine(from: THREE.Vector2, to: THREE.Vector2, material: THREE.Material) {
+    const geometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(from.x, from.y, 0.05),
+      new THREE.Vector3(to.x, to.y, 0.05),
+    ]);
+    frameGroup.add(new THREE.Line(geometry, material));
+  }
+
+  if (railNb > 0) drawHorizontalBars(railNb, barMaterial);
+  if (stileNb > 0) drawVerticalBars(stileNb, barMaterial);
+  if (horGlazingBarsNumber > 0) drawHorizontalBars(horGlazingBarsNumber, glazingBarMaterial);
+  if (verGlazingBarsNumber > 0) drawVerticalBars(verGlazingBarsNumber, glazingBarMaterial);
 }
