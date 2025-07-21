@@ -57,55 +57,16 @@ export function createCircleFrame(
       frameGroup
     );
   }
-  buildGlazingBars(
+  buildBarsCircle(
     frameWidth,
     frameHeight,
     frameThickness,
-    interiorGap,
+    stileNb, 
+    railNb,
     horGlazingBarsNumber,
     verGlazingBarsNumber,
     frameGroup
   );
-
-  // Ajout des montants
-  let montantXs: number[] = [];
-  if (stileNb > 0) {
-    const montantMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const rX = frameWidth / 2 - frameThickness;
-    const rY = frameHeight / 2 - frameThickness;
-    let verticalDivisions = stileNb+1;
-    for (let i = 1; i < verticalDivisions; i++) {
-      const x = -rX + (2 * rX * i) / verticalDivisions;
-      montantXs.push(x);
-      // Pour chaque x, calculer la hauteur maximale de l'ellipse à cet x
-      const yMax = rY * Math.sqrt(Math.max(0, 1 - (x * x) / (rX * rX)));
-      const height = 2 * yMax;
-      const geometry = new THREE.BoxGeometry(frameThickness, height, frameThickness);
-      const montant = new THREE.Mesh(geometry, montantMaterial);
-      montant.position.set(x, 0, 0.05);
-      frameGroup.add(montant);
-    }
-  }
-
-  // Ajout des traverses
-  let traversesYs: number[] = [];
-  if (railNb > 0) {
-    const traverseMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const rX = frameWidth / 2 - frameThickness;
-    const rY = frameHeight / 2 - frameThickness;
-    let horizontalDivisions = railNb + 1;
-    for (let i = 1; i < horizontalDivisions; i++) {
-      const y = -rY + (2 * rY * i) / horizontalDivisions;
-      traversesYs.push(y);
-      // Pour chaque y, calculer la largeur maximale de l'ellipse à ce y
-      const xMax = rX * Math.sqrt(Math.max(0, 1 - (y * y) / (rY * rY)));
-      const width = 2 * xMax;
-      const geometry = new THREE.BoxGeometry(width, frameThickness, frameThickness);
-      const traverse = new THREE.Mesh(geometry, traverseMaterial);
-      traverse.position.set(0, y, 0.05);
-      frameGroup.add(traverse);
-    }
-  }
 
   return frameGroup;
 }
@@ -179,40 +140,52 @@ function buildOpening(
   }
 }
 
-function buildGlazingBars(
+function buildBarsCircle(
   frameWidth: number,
   frameHeight: number,
   frameThickness: number,
-  interiorGap: number,
+  stileNb: number,
+  railNb: number,
   horGlazingBarsNumber: number,
   verGlazingBarsNumber: number,
   frameGroup: THREE.Group
 ) {
-  const barRadiusX = frameWidth / 2 - frameThickness - interiorGap;
-  const barRadiusY = frameHeight / 2 - frameThickness - interiorGap;
-  const dashMaterial = new THREE.LineBasicMaterial({ color: LINE_COLOR, linewidth: 1 });
-  if (horGlazingBarsNumber > 0) {
-    for (let i = 1; i <= horGlazingBarsNumber; i++) {
-      const angle = (i / (horGlazingBarsNumber + 1)) * Math.PI;
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(-barRadiusX * Math.cos(angle), -barRadiusY * Math.sin(angle), 0.02),
-        new THREE.Vector3(barRadiusX * Math.cos(angle), barRadiusY * Math.sin(angle), 0.02)
-      ]);
-      const line = new THREE.Line(geometry, dashMaterial);
-      line.computeLineDistances();
-      frameGroup.add(line);
+  const rX = frameWidth / 2 - frameThickness;
+  const rY = frameHeight / 2 - frameThickness;
+
+  function addBars(
+    count: number,
+    isVertical: boolean,
+    thickness: number,
+    material: THREE.Material
+  ) {
+    if (count <= 0) return;
+
+    const divisions = count + 1;
+    for (let i = 1; i < divisions; i++) {
+      const pos = - (isVertical ? rX : rY) + (2 * (isVertical ? rX : rY) * i) / divisions;
+      const sizeMax = (isVertical ? rY : rX) * Math.sqrt(Math.max(0, 1 - (pos * pos) / ((isVertical ? rX : rY) ** 2)));
+      const size = 2 * sizeMax;
+
+      const geometry = isVertical
+        ? new THREE.BoxGeometry(thickness, size, thickness)
+        : new THREE.BoxGeometry(size, thickness, thickness);
+
+      const bar = new THREE.Mesh(geometry, material);
+      bar.position.set(isVertical ? pos : 0, isVertical ? 0 : pos, 0.05);
+      frameGroup.add(bar);
     }
   }
-  if (verGlazingBarsNumber > 0) {
-    for (let i = 1; i <= verGlazingBarsNumber; i++) {
-      const angle = (i / (verGlazingBarsNumber + 1)) * Math.PI + Math.PI / 2;
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(barRadiusX * Math.cos(angle), barRadiusY * Math.sin(angle), 0.02),
-        new THREE.Vector3(-barRadiusX * Math.cos(angle), -barRadiusY * Math.sin(angle), 0.02)
-      ]);
-      const line = new THREE.Line(geometry, dashMaterial);
-      line.computeLineDistances();
-      frameGroup.add(line);
-    }
-  }
+
+  // Montants principaux
+  addBars(stileNb, true, frameThickness, new THREE.MeshBasicMaterial({ color: 0x000000 }));
+
+  // Traverses principales
+  addBars(railNb, false, frameThickness, new THREE.MeshBasicMaterial({ color: 0x000000 }));
+
+  // Montants fins (verGlazingBars)
+  addBars(verGlazingBarsNumber, true, 0.01, new THREE.MeshBasicMaterial({ color: LINE_COLOR }));
+
+  // Traverses fines (horGlazingBars)
+  addBars(horGlazingBarsNumber, false, 0.01, new THREE.MeshBasicMaterial({ color: LINE_COLOR }));
 }

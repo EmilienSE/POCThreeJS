@@ -37,7 +37,7 @@ export class ThreeJS {
   openingDirection: OpeningDirection = OpeningDirection.Left;
   frameService: Frame;
   selectedTopShape: Shapes = Shapes.SegmentTopArch;
-  selectedBottomShape: Shapes = Shapes.HalfMoon;
+  selectedBottomShape: Shapes = Shapes.Circle;
   shapeOptions = Object.values(Shapes);
 
   constructor(frameService: Frame) {
