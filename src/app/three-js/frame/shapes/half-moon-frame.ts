@@ -89,129 +89,18 @@ export function createHalfMoonFrame(
   }
 
   // Petits bois
-  buildGlazingBarsHalfMoon(
+  buildBarsHalfMoon(
     frameWidth,
     frameHeight,
     frameThickness,
     interiorGap,
+    stileNb,
+    railNb,
     horGlazingBarsNumber,
     verGlazingBarsNumber,
     frameGroup
   );
 
-  if(railNb > 0) {
-    const railMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
-    const baseY = -frameHeight / 2;
-    const outerPoints = getHalfMoonPoints(
-      frameWidth / 2 - frameThickness,
-      frameHeight - frameThickness
-    );
-
-    // y max de la courbe (le sommet)
-    const yMax = Math.max(...outerPoints.map(p => p.y));
-
-    // On crée une fonction inverse pour la courbe : pour une Y donnée, on cherche x gauche et droit
-    // La courbe est symétrique donc on peut chercher les intersections sur x<0 et déduire x>0
-    function findXAtY(yTarget: number) {
-      let xLeft = null;
-      let xRight = null;
-
-      for (let i = 0; i < outerPoints.length - 1; i++) {
-        const p1 = outerPoints[i];
-        const p2 = outerPoints[i + 1];
-
-        // Vérifier si yTarget est entre p1.y et p2.y
-        if ((p1.y <= yTarget && yTarget <= p2.y) || (p2.y <= yTarget && yTarget <= p1.y)) {
-          const ratio = (yTarget - p1.y) / (p2.y - p1.y);
-          const xAtY = p1.x + ratio * (p2.x - p1.x);
-
-          if (xAtY < 0) xLeft = xAtY;
-          else xRight = xAtY;
-
-          // Dès qu’on a trouvé les deux cotés on peut sortir
-          if (xLeft !== null && xRight !== null) break;
-        }
-      }
-
-      // Si on a pas trouvé un des côtés (bord cases)
-      if (xLeft === null) xLeft = - (frameWidth / 2 - frameThickness);
-      if (xRight === null) xRight = frameWidth / 2 - frameThickness;
-
-      return { xLeft, xRight };
-    }
-
-    // Créer les rails
-    for (let i = 1; i <= railNb; i++) {
-      const t = i / (railNb + 1);
-      const yRailLocal = t * yMax;
-      const yRail = baseY + yRailLocal;
-
-      const { xLeft, xRight } = findXAtY(yRailLocal);
-
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(xLeft, yRail, 0.05),
-        new THREE.Vector3(xRight, yRail, 0.05),
-      ]);
-
-      const line = new THREE.Line(geometry, railMaterial);
-      frameGroup.add(line);
-    }
-  }
-
-  // Ajout des montants internes (interpolation entre la base et la courbe)
-  if (stileNb > 0) {
-    const montantMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
-    const baseY = -frameHeight / 2;
-
-    const usableWidth = frameWidth - 2 * frameThickness;
-    const outerPoints = getHalfMoonPoints(
-      frameWidth / 2 - frameThickness,
-      frameHeight - frameThickness
-    );
-
-    // Évite les bords : on divise en stileNb + 1 intervalles, et on saute les extrémités
-    for (let i = 1; i <= stileNb; i++) {
-      const t = i / (stileNb + 1); // jamais 0 ni 1
-      const xBase = -usableWidth / 2 + t * usableWidth;
-
-      // Interpolation linéaire sur la courbe pour trouver y
-      let yTop = null;
-      for (let j = 0; j < outerPoints.length - 1; j++) {
-        const p1 = outerPoints[j];
-        const p2 = outerPoints[j + 1];
-
-        if ((p1.x <= xBase && xBase <= p2.x) || (p2.x <= xBase && xBase <= p1.x)) {
-          const ratio = (xBase - p1.x) / (p2.x - p1.x);
-          yTop = p1.y + ratio * (p2.y - p1.y);
-          break;
-        }
-      }
-
-      if (yTop !== null) {
-        const geometry = new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(xBase, baseY, 0.05),
-          new THREE.Vector3(xBase, baseY + yTop, 0.05),
-        ]);
-        const line = new THREE.Line(geometry, montantMaterial);
-        frameGroup.add(line);
-      } else {
-        console.warn(`xBase=${xBase.toFixed(2)} pas trouvé sur la courbe`);
-      }
-    }
-  }
-    
-  function getHalfMoonPoints(rx: number, ry: number): THREE.Vector2[] {
-    const points: THREE.Vector2[] = [];
-    for (let t = 0; t <= 64; t++) {
-      const angle = Math.PI * (t / 64);
-      points.push(new THREE.Vector2(
-        rx * Math.cos(angle),
-        ry * Math.sin(angle)
-      ));
-    }
-  
-    return points;
-  }
   return frameGroup;
 }
 
@@ -277,14 +166,113 @@ function buildOpeningHalfMoon(
   });
 }
 
-function buildGlazingBarsHalfMoon(
+function buildBarsHalfMoon(
   frameWidth: number,
   frameHeight: number,
   frameThickness: number,
   interiorGap: number,
+  stileNb: number,
+  railNb: number,
   horGlazingBarsNumber: number,
   verGlazingBarsNumber: number,
   frameGroup: THREE.Group
 ) {
+  const baseY = -frameHeight / 2;
+  const usableWidth = frameWidth - 2 * frameThickness;
   
+  const BAR_Z = 0.05;
+  const GLAZING_Z = 0.04; // petits bois en dessous
+
+  function getHalfMoonPoints(rx: number, ry: number): THREE.Vector2[] {
+    return Array.from({ length: 65 }, (_, t) => {
+      const angle = Math.PI * (t / 64);
+      return new THREE.Vector2(rx * Math.cos(angle), ry * Math.sin(angle));
+    });
+  }
+
+  function findXAtY(points: THREE.Vector2[], yTarget: number): { xLeft: number; xRight: number } {
+    let xLeft: number | null = null;
+    let xRight: number | null = null;
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const [p1, p2] = [points[i], points[i + 1]];
+      if ((p1.y <= yTarget && yTarget <= p2.y) || (p2.y <= yTarget && yTarget <= p1.y)) {
+        const ratio = (yTarget - p1.y) / (p2.y - p1.y);
+        const xAtY = p1.x + ratio * (p2.x - p1.x);
+        if (xAtY < 0) xLeft = xAtY;
+        else xRight = xAtY;
+        if (xLeft !== null && xRight !== null) break;
+      }
+    }
+
+    const defaultX = frameWidth / 2 - frameThickness;
+    return {
+      xLeft: xLeft ?? -defaultX,
+      xRight: xRight ?? defaultX,
+    };
+  }
+
+  function findYAtX(points: THREE.Vector2[], xTarget: number): number | null {
+    for (let i = 0; i < points.length - 1; i++) {
+      const [p1, p2] = [points[i], points[i + 1]];
+      if ((p1.x <= xTarget && xTarget <= p2.x) || (p2.x <= xTarget && xTarget <= p1.x)) {
+        const ratio = (xTarget - p1.x) / (p2.x - p1.x);
+        return p1.y + ratio * (p2.y - p1.y);
+      }
+    }
+    return null;
+  }
+
+  function createHorizontalBars(count: number, points: THREE.Vector2[], material: THREE.Material, z: number) {
+    const yMax = Math.max(...points.map(p => p.y));
+    for (let i = 1; i <= count; i++) {
+      const t = i / (count + 1);
+      const yLocal = t * yMax;
+      const yWorld = baseY + yLocal;
+      const { xLeft, xRight } = findXAtY(points, yLocal);
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(xLeft, yWorld, z),
+        new THREE.Vector3(xRight, yWorld, z),
+      ]);
+      frameGroup.add(new THREE.Line(geometry, material));
+    }
+  }
+
+  function createVerticalBars(count: number, points: THREE.Vector2[], material: THREE.Material, z: number) {
+    for (let i = 1; i <= count; i++) {
+      const t = i / (count + 1);
+      const x = -usableWidth / 2 + t * usableWidth;
+      const yTop = findYAtX(points, x);
+      if (yTop !== null) {
+        const geometry = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(x, baseY, z),
+          new THREE.Vector3(x, baseY + yTop, z),
+        ]);
+        frameGroup.add(new THREE.Line(geometry, material));
+      } else {
+        console.warn(`x=${x.toFixed(2)} not found on curve`);
+      }
+    }
+  }
+
+  const outerPoints = getHalfMoonPoints(
+    frameWidth / 2 - frameThickness,
+    frameHeight - frameThickness
+  );
+
+  if (railNb > 0) {
+    createHorizontalBars(railNb, outerPoints, new THREE.LineBasicMaterial({ color: 0x000000 }), BAR_Z);
+  }
+
+  if (stileNb > 0) {
+    createVerticalBars(stileNb, outerPoints, new THREE.LineBasicMaterial({ color: 0x000000 }), BAR_Z);
+  }
+
+  if (horGlazingBarsNumber > 0) {
+    createHorizontalBars(horGlazingBarsNumber, outerPoints, new THREE.LineBasicMaterial({ color: LINE_COLOR }), GLAZING_Z);
+  }
+
+  if (verGlazingBarsNumber > 0) {
+    createVerticalBars(verGlazingBarsNumber, outerPoints, new THREE.LineBasicMaterial({ color: LINE_COLOR }), GLAZING_Z);
+  }
 }
