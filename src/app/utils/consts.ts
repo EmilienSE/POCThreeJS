@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export const WINDOW_WIDTH = 3;
-export const BOTTOM_FRAME_HEIGHT = 4.5;
+export const BOTTOM_FRAME_HEIGHT = 3;
 export const TOP_FRAME_HEIGHT = 1.5;
 export const LOW_HEIGHT = 1.5;
 export const FRAME_THICKNESS = 0.03;

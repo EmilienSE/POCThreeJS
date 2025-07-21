@@ -110,112 +110,18 @@ export function createSegmentTopArchFrame(
     );
   }
 
-  if (railNb > 0) {
-    const railMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
-    const baseY = -frameHeight / 2;
-    const outerPoints = getSegmentTopArchPoints(
-      frameWidth - frameThickness,
-      frameHeight,
-      startAngle,
-      endAngle
-    );
-
-    const yMax = Math.max(...outerPoints.map(p => p.y));
-
-    function findXAtY(yTarget: number) {
-      let xLeft: number | null = null;
-      let xRight: number | null = null;
-
-      for (let i = 0; i < outerPoints.length - 1; i++) {
-        const p1 = outerPoints[i];
-        const p2 = outerPoints[i + 1];
-
-        if ((p1.y <= yTarget && yTarget <= p2.y) || (p2.y <= yTarget && yTarget <= p1.y)) {
-          const ratio = (yTarget - p1.y) / (p2.y - p1.y);
-          const xAtY = p1.x + ratio * (p2.x - p1.x);
-
-          if (xAtY < 0) xLeft = xAtY;
-          else xRight = xAtY;
-
-          if (xLeft !== null && xRight !== null) break;
-        }
-      }
-
-      if (xLeft === null) xLeft = - (frameWidth / 2 - frameThickness);
-      if (xRight === null) xRight = (frameWidth / 2 - frameThickness);
-
-      return { xLeft, xRight };
-    }
-
-    for (let i = 1; i <= railNb; i++) {
-      const t = i / (railNb + 1);
-      const yLocal = t * yMax;
-      const yGlobal = baseY + yLocal;
-
-      const { xLeft, xRight } = findXAtY(yLocal);
-
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(xLeft, yGlobal, 0.05),
-        new THREE.Vector3(xRight, yGlobal, 0.05),
-      ]);
-      const line = new THREE.Line(geometry, railMaterial);
-      frameGroup.add(line);
-    }
-  }
-
-  // Ajout des montants internes (interpolation entre la base et la courbe)
-  if (stileNb > 0) {
-    const stileMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
-    const baseY = -frameHeight / 2;
-    const usableWidth = frameWidth - 2 * frameThickness;
-
-    const outerPoints = getSegmentTopArchPoints(
-      frameWidth - frameThickness,
-      frameHeight,
-      startAngle,
-      endAngle
-    );
-
-    for (let i = 1; i <= stileNb; i++) {
-      const t = i / (stileNb + 1);
-      const xBase = -usableWidth / 2 + t * usableWidth;
-
-      let yTop: number | null = null;
-      for (let j = 0; j < outerPoints.length - 1; j++) {
-        const p1 = outerPoints[j];
-        const p2 = outerPoints[j + 1];
-
-        if ((p1.x <= xBase && xBase <= p2.x) || (p2.x <= xBase && xBase <= p1.x)) {
-          const ratio = (xBase - p1.x) / (p2.x - p1.x);
-          yTop = p1.y + ratio * (p2.y - p1.y);
-          break;
-        }
-      }
-
-      if (yTop !== null) {
-        const geometry = new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(xBase, baseY, 0.05),
-          new THREE.Vector3(xBase, baseY + yTop, 0.05),
-        ]);
-        const line = new THREE.Line(geometry, stileMaterial);
-        frameGroup.add(line);
-      } else {
-        console.warn(`xBase=${xBase.toFixed(2)} pas trouvé sur la courbe`);
-      }
-    }
-  }
-
-  function getSegmentTopArchPoints(rx: number, ry: number, startAngle: number, endAngle: number): THREE.Vector2[] {
-    const points: THREE.Vector2[] = [];
-    for (let t = 0; t <= 64; t++) {
-      const angle = startAngle + (endAngle - startAngle) * (t / 64);
-      points.push(new THREE.Vector2(
-        rx * Math.cos(angle),
-        ry * Math.sin(angle)
-      ));
-    }
-    return points;
-  }
+  buildBars(
+    frameWidth,
+    frameHeight,
+    frameThickness,
+    horGlazingBarsNumber,
+    verGlazingBarsNumber,
+    stileNb,
+    railNb,
+    frameGroup,
+    startAngle,
+    endAngle
+  )
 
   return frameGroup;
 }
@@ -282,4 +188,111 @@ function buildOpeningSegmentTopArch(
     line.position.y = -frameHeight / 2;
     frameGroup.add(line);
   });
+}
+
+function buildBars(
+  frameWidth: number,
+  frameHeight: number,
+  frameThickness: number,
+  horGlazingBarsNumber: number,
+  verGlazingBarsNumber: number,
+  stileNb: number,
+  railNb: number,
+  frameGroup: THREE.Group,
+  startAngle: number,
+  endAngle: number
+) {
+  const baseY = -frameHeight / 2;
+  const usableWidth = frameWidth - 2 * frameThickness;
+  const outerPoints = getSegmentTopArchPoints(
+    frameWidth - frameThickness,
+    frameHeight,
+    startAngle,
+    endAngle
+  );
+  const yMax = Math.max(...outerPoints.map(p => p.y));
+
+  const BAR_Z = 0.05;
+  const GLAZING_Z = 0.04;
+
+  const defaultMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+  const glazingMaterial = new THREE.LineBasicMaterial({ color: LINE_COLOR });
+
+  function findXAtY(yTarget: number) {
+    let xLeft: number | null = null;
+    let xRight: number | null = null;
+
+    for (let i = 0; i < outerPoints.length - 1; i++) {
+      const [p1, p2] = [outerPoints[i], outerPoints[i + 1]];
+      if ((p1.y <= yTarget && yTarget <= p2.y) || (p2.y <= yTarget && yTarget <= p1.y)) {
+        const ratio = (yTarget - p1.y) / (p2.y - p1.y);
+        const x = p1.x + ratio * (p2.x - p1.x);
+        if (x < 0) xLeft = x;
+        else xRight = x;
+        if (xLeft !== null && xRight !== null) break;
+      }
+    }
+
+    if (xLeft === null) xLeft = -usableWidth / 2;
+    if (xRight === null) xRight = usableWidth / 2;
+
+    return { xLeft, xRight };
+  }
+
+  function findYAtX(xTarget: number): number | null {
+    for (let i = 0; i < outerPoints.length - 1; i++) {
+      const [p1, p2] = [outerPoints[i], outerPoints[i + 1]];
+      if ((p1.x <= xTarget && xTarget <= p2.x) || (p2.x <= xTarget && xTarget <= p1.x)) {
+        const ratio = (xTarget - p1.x) / (p2.x - p1.x);
+        return p1.y + ratio * (p2.y - p1.y);
+      }
+    }
+    return null;
+  }
+
+  function addHorizontalBars(count: number, material: THREE.Material, z: number) {
+    for (let i = 1; i <= count; i++) {
+      const t = i / (count + 1);
+      const yLocal = t * yMax;
+      const yGlobal = baseY + yLocal;
+      const { xLeft, xRight } = findXAtY(yLocal);
+
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(xLeft, yGlobal, z),
+        new THREE.Vector3(xRight, yGlobal, z),
+      ]);
+      frameGroup.add(new THREE.Line(geometry, material));
+    }
+  }
+
+  function addVerticalBars(count: number, material: THREE.Material, z: number) {
+    for (let i = 1; i <= count; i++) {
+      const t = i / (count + 1);
+      const x = -usableWidth / 2 + t * usableWidth;
+      const yTop = findYAtX(x);
+      if (yTop !== null) {
+        const geometry = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(x, baseY, z),
+          new THREE.Vector3(x, baseY + yTop, z),
+        ]);
+        frameGroup.add(new THREE.Line(geometry, material));
+      } else {
+        console.warn(`x=${x.toFixed(2)} not found on curve`);
+      }
+    }
+  }
+
+  if (railNb > 0) addHorizontalBars(railNb, defaultMaterial, BAR_Z);
+  if (stileNb > 0) addVerticalBars(stileNb, defaultMaterial, BAR_Z);
+  if (horGlazingBarsNumber > 0) addHorizontalBars(horGlazingBarsNumber, glazingMaterial, GLAZING_Z);
+  if (verGlazingBarsNumber > 0) addVerticalBars(verGlazingBarsNumber, glazingMaterial, GLAZING_Z);
+
+  function getSegmentTopArchPoints(rx: number, ry: number, start: number, end: number): THREE.Vector2[] {
+    const points: THREE.Vector2[] = [];
+    for (let t = 0; t <= 64; t++) {
+      const angle = start + (end - start) * (t / 64);
+      points.push(new THREE.Vector2(rx * Math.cos(angle), ry * Math.sin(angle)));
+    }
+    return points;
+  }
 }
