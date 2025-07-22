@@ -104,6 +104,14 @@ export class ThreeJS implements AfterViewInit {
       const config = this.bottomFrameConfigs[i];
       const frameWidth = config.width;
 
+      // Vérifie si c’est le premier frame et qu’il est un triangle ou un trapèze et si le deuxième est un rectangle
+      const shouldInvert = i === 0 && this.bottomFrameConfigs.length > 1 && (config.shape === Shapes.Triangle || config.shape === Shapes.Trapezoid);
+
+      if(shouldInvert){
+        if(config.openingDirection === OpeningDirection.Left) config.openingDirection = OpeningDirection.Right;
+        else if(config.openingDirection === OpeningDirection.Right) config.openingDirection = OpeningDirection.Left;
+      }
+      
       const frame = this.frameService.buildFrame(
         frameWidth,
         config.height,
@@ -118,15 +126,8 @@ export class ThreeJS implements AfterViewInit {
         config.railNb
       );
 
-      // 🔁 Vérifie si c’est le premier frame et qu’il est un triangle
-      //     et si le deuxième est un rectangle
-      if (
-        i === 0 &&
-        this.bottomFrameConfigs.length > 1 &&
-        (config.shape === Shapes.Triangle || config.shape === Shapes.Trapezoid) &&
-        this.bottomFrameConfigs[1].shape === Shapes.Rectangle
-      ) {
-        frame.scale.x *= -1; // 🔁 miroir horizontal
+      if (shouldInvert) {
+        frame.scale.x *= -1; // miroir horizontal
       }
 
 
@@ -149,7 +150,7 @@ export class ThreeJS implements AfterViewInit {
 
 
     if (this.hasTopFrame) {
-      const topWidth = this.getTotalBottomFramesWidth() - (this.frameThickness *2);
+      const topWidth = this.getTotalBottomFramesWidth() - (this.frameThickness * bottomFramesGroup.children.length);
 
       const topFrame = this.frameService.buildFrame(
         topWidth,
@@ -195,7 +196,7 @@ export class ThreeJS implements AfterViewInit {
     const size = new THREE.Vector3();
     fullBox.getSize(size);
     const maxDim = Math.max(size.x, size.y);
-    const margin = 3;
+    const margin = 1.2;
     const halfDim = (maxDim * margin) / 2;
     this.camera.left = -halfDim;
     this.camera.right = halfDim;
