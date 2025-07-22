@@ -1,51 +1,87 @@
-<div style="margin-bottom: 1em; display:flex; flex-direction: row; align-items: center;">
-  <label>L :
-    <input type="number" step="0.1" min="0.1" [(ngModel)]="windowWidth" (input)="onDimensionChange()" style="width:50px">
-  </label>
-  <label style="margin-left: 1em;">H partie basse :
-    <input type="number" step="0.1" min="0.1" [(ngModel)]="bottomFrameHeight" (input)="onDimensionChange()" style="width:50px">
-  </label>
-  <label style="margin-left: 1em;">H partie haute:
-    <input type="number" step="0.1" min="0.1" [(ngModel)]="topFrameHeight" (input)="onDimensionChange()" style="width:50px">
-  </label>
-  <label style="margin-left: 1em;">Nb vtx bas :
-    <input type="number" step="1" min="1" [(ngModel)]="bottomFrameNb" (input)="onDimensionChange()" style="width:50px">
-  </label>
-  <label style="margin-left: 1em;">Vt haut :
-    <input type="checkbox" [(ngModel)]="hasTopFrame" (change)="onDimensionChange()">
-  </label>
-  <label style="margin-left: 1em;">Nb PB horizontaux :
-    <input type="number" step="1" min="0" [(ngModel)]="horizontalGlazingBarsNb" (input)="onDimensionChange()" style="width:50px">
-  </label>
-  <label style="margin-left: 1em;">Nb PB verticaux :
-    <input type="number" step="1" min="0" [(ngModel)]="verticalGlazingBarsNb" (input)="onDimensionChange()" style="width:50px">
-  </label>
-  <label style="margin-left: 1em;">Nb traverses :
-    <input type="number" step="1" min="0" [(ngModel)]="railNb" (input)="onDimensionChange()" style="width:50px">
-  </label>
-  <label style="margin-left: 1em;">Nb montants :
-    <input type="number" step="1" min="0" [(ngModel)]="stileNb" (input)="onDimensionChange()" style="width:50px">
-  </label>
-  <label style="margin-left: 1em;" for="selectedShape">Forme haut :
-      <select name="selectedShape" id="selectedShape" [(ngModel)]="selectedTopShape" (change)="onDimensionChange()">
-        @for(shape of shapeOptions; track shape) {
-            <option [value]="shape" [selected]="selectedTopShape === shape">{{shape}}</option>
-        }
-      </select>
-  </label>
-  <label style="margin-left: 1em;" for="selectedShape">Forme bas :
-      <select name="selectedShape" id="selectedShape" [(ngModel)]="selectedBottomShape" (change)="onDimensionChange()">
-        @for(shape of shapeOptions; track shape) {
-            <option [value]="shape" [selected]="selectedBottomShape === shape">{{shape}}</option>
-        }
-      </select>
-  </label>
-  <label style="margin-left: 1em;" for="openingDirection">Ouverture :
-      <select name="openingDirection" id="openingDirection" [(ngModel)]="openingDirection" (change)="onDimensionChange()">
-        @for(opening of openingDirectionOptions; track opening) {
-            <option [value]="opening" [selected]="openingDirection === opening">{{opening}}</option>
-        }
-      </select>
-  </label>
+<div class="three-js">
+  <div class="preview" #previewContainer></div>
+  <div class="controls">
+    <div *ngFor="let config of bottomFrameConfigs; let i = index">
+      <h4>Cadre bas #{{i + 1}}</h4>
+      <label>Largeur :
+        <input type="number" min="0.1" step="0.1" [(ngModel)]="config.width" (input)="onDimensionChange()" style="width: 60px;">
+      </label>
+      <label>Petite hauteur :
+        <input type="number" min="0.1" step="0.1" [(ngModel)]="config.lowHeight" (input)="onDimensionChange()" style="width: 60px;">
+      </label>
+      <label>Hauteur :
+        <input type="number" min="0.1" step="0.1" [(ngModel)]="config.height" (input)="onDimensionChange()" style="width: 60px;">
+      </label>
+      <label>Ouverture :
+        <select [(ngModel)]="config.openingDirection" (change)="onDimensionChange()">
+          <option *ngFor="let direction of openingDirectionOptions" [value]="direction">{{ direction }}</option>
+        </select>
+      </label>
+      <label>Forme :
+        <select [(ngModel)]="config.shape" (change)="onDimensionChange()">
+          <option *ngFor="let shape of shapeOptions" [value]="shape">{{ shape }}</option>
+        </select>
+      </label>
+      <label>PB H :
+        <input type="number" [(ngModel)]="config.horizontalGlazingBarsNb" (input)="onDimensionChange()">
+      </label>
+      <label>PB V :
+        <input type="number" [(ngModel)]="config.verticalGlazingBarsNb" (input)="onDimensionChange()">
+      </label>
+      <label>Traverses :
+        <input type="number" [(ngModel)]="config.railNb" (input)="onDimensionChange()">
+      </label>
+      <label>Montants :
+        <input type="number" [(ngModel)]="config.stileNb" (input)="onDimensionChange()">
+      </label>
+      <button (click)="removeBottomFrame(i)" *ngIf="bottomFrameConfigs.length > 1">Supprimer</button>
+    </div>
+    
+    <button (click)="addBottomFrame()">Ajouter un cadre bas</button>
+    <button (click)="toggleTopFrame()">Toggle cadre haut</button>
+    
+    <div *ngIf="hasTopFrame">
+      <h4>Cadre haut</h4>
+
+      <label>Hauteur :
+        <input type="number" min="0.1" step="0.1" [(ngModel)]="topFrameConfig.height" (input)="onDimensionChange()" style="width: 60px;">
+      </label>
+
+      <label>Petite hauteur :
+        <input type="number" min="0.1" step="0.1" [(ngModel)]="topFrameConfig.lowHeight" (input)="onDimensionChange()" style="width: 60px;">
+      </label>
+    
+      <label>Forme :
+        <select [(ngModel)]="topFrameConfig.shape" (change)="onDimensionChange()">
+          @for(shape of shapeOptions; track shape) {
+            <option [value]="shape">{{shape}}</option>
+          }
+        </select>
+      </label>
+    
+      <label style="margin-left: 1em;">Ouverture :
+        <select [(ngModel)]="topFrameConfig.openingDirection" (change)="onDimensionChange()">
+          @for(dir of openingDirectionOptions; track dir) {
+            <option [value]="dir">{{dir}}</option>
+          }
+        </select>
+      </label>
+    
+      <label style="margin-left: 1em;">PB H :
+        <input type="number" [(ngModel)]="topFrameConfig.horizontalGlazingBarsNb" (input)="onDimensionChange()" style="width: 50px;">
+      </label>
+    
+      <label style="margin-left: 1em;">PB V :
+        <input type="number" [(ngModel)]="topFrameConfig.verticalGlazingBarsNb" (input)="onDimensionChange()" style="width: 50px;">
+      </label>
+    
+      <label style="margin-left: 1em;">Traverses :
+        <input type="number" [(ngModel)]="topFrameConfig.railNb" (input)="onDimensionChange()" style="width: 50px;">
+      </label>
+    
+      <label style="margin-left: 1em;">Montants :
+        <input type="number" [(ngModel)]="topFrameConfig.stileNb" (input)="onDimensionChange()" style="width: 50px;">
+      </label>
+    </div>
+  </div>
 </div>
-<!-- Le rendu Three.js s'affiche dans le body, rien à ajouter ici pour la scène -->

@@ -1,11 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { AfterViewInit, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import * as THREE from 'three';
 import { OpeningDirection } from '../utils/opening-direction.enum';
 import { FRAME_THICKNESS, WINDOW_WIDTH, INTERIOR_GAP, TOP_FRAME_HEIGHT, BOTTOM_FRAME_HEIGHT, LOW_HEIGHT } from '../utils/consts';
 import { Frame } from './frame/frame';
 import { Shapes } from '../utils/shapes';
+import { FrameConfig } from '../utils/frame-config';
+import { ElementRef, ViewChild } from '@angular/core';
+
 
 @Component({
   selector: 'app-three-js',
@@ -13,11 +16,12 @@ import { Shapes } from '../utils/shapes';
   templateUrl: './three-js.html',
   styleUrl: './three-js.scss'
 })
-export class ThreeJS {
+export class ThreeJS implements AfterViewInit {
   scene: any;
   camera: any;
   renderer: any;
   windowGroup: any;
+  @ViewChild('previewContainer', { static: true }) previewContainerRef!: ElementRef;
 
   windowWidth = WINDOW_WIDTH;
   bottomFrameHeight = BOTTOM_FRAME_HEIGHT;
@@ -38,10 +42,28 @@ export class ThreeJS {
   frameService: Frame;
   selectedTopShape: Shapes = Shapes.SegmentTopArch;
   selectedBottomShape: Shapes = Shapes.BasketHandleArch;
+  bottomFrameConfigs: FrameConfig[] = [];
+
+  topFrameConfig: FrameConfig = {
+    width: this.windowWidth,
+    height: this.topFrameHeight,
+    lowHeight: this.lowHeight,
+    shape: this.selectedTopShape,
+    horizontalGlazingBarsNb: 0,
+    verticalGlazingBarsNb: 0,
+    stileNb: 0,
+    railNb: 0,
+    openingDirection: OpeningDirection.Fixed
+  };
+
+
   shapeOptions = Object.values(Shapes);
 
   constructor(frameService: Frame) {
     this.frameService = frameService;
+  }
+
+  ngAfterViewInit(): void {
     this.init();
   }
 
@@ -50,64 +72,99 @@ export class ThreeJS {
     this.buildWindow();
   }
 
+  updateConfigs() {
+    while (this.bottomFrameConfigs.length < this.bottomFrameNb) {
+      this.bottomFrameConfigs.push(this.createDefaultConfig());
+    }
+    this.bottomFrameConfigs = this.bottomFrameConfigs.slice(0, this.bottomFrameNb);
+  }
+
+  createDefaultConfig(): FrameConfig {
+    return {
+      openingDirection: OpeningDirection.Fixed,
+      width: this.windowWidth, // valeur par défaut, ou un tiers, etc.
+      height: this.bottomFrameHeight,
+      shape: Shapes.Rectangle,
+      horizontalGlazingBarsNb: 0,
+      verticalGlazingBarsNb: 0,
+      railNb: 0,
+      stileNb: 0
+    };
+  }
+
   buildWindow() {
+    this.updateConfigs();
     const frames: THREE.Group[] = [];
+    const bottomFramesGroup = new THREE.Group();
 
-    const totalWidth = this.windowWidth;
-    const topHeight = this.topFrameHeight;
-    const bottomHeight = this.bottomFrameHeight;
-    const hasTop = this.hasTopFrame;
+    let currentX = -this.windowWidth / 2;
 
-    for (let i = 0; i < this.bottomFrameNb; i++) {
+    for (let i = 0; i < this.bottomFrameConfigs.length; i++) {
+      const config = this.bottomFrameConfigs[i];
+      const frameWidth = config.width;
+
       const frame = this.frameService.buildFrame(
-        totalWidth / this.bottomFrameNb,
-        bottomHeight,
-        this.lowHeight,
+        frameWidth,
+        config.height,
+        config.lowHeight ?? 1,
         this.frameThickness,
         this.interiorGap,
-        this.openingDirection,
-        this.horizontalGlazingBarsNb,
-        this.verticalGlazingBarsNb,
-        this.selectedBottomShape,
-        this.stileNb,
-        this.railNb
+        config.openingDirection,
+        config.horizontalGlazingBarsNb,
+        config.verticalGlazingBarsNb,
+        config.shape,
+        config.stileNb,
+        config.railNb
       );
 
       frame.position.set(
-        (i - (this.bottomFrameNb - 1) / 2) * (totalWidth / this.bottomFrameNb) - (i > 0 ? this.frameThickness * i : 0),
-        bottomHeight / 2, // centre du cadre par rapport à la base
+        currentX + frameWidth / 2,
+        this.getMaxBottomHeight() / 2,
         0
       );
 
+      currentX += frameWidth - this.frameThickness;
+
       frames.push(frame);
+      bottomFramesGroup.add(frame);
     }
 
-    if (hasTop) {
+    
+    const bottomBox = new THREE.Box3().setFromObject(bottomFramesGroup);
+    const bottomCenter = new THREE.Vector3();
+    bottomBox.getCenter(bottomCenter);
+
+
+    if (this.hasTopFrame) {
+      const topWidth = this.getTotalBottomFramesWidth() - (this.frameThickness *2);
+
       const topFrame = this.frameService.buildFrame(
-        totalWidth - (this.bottomFrameNb - 1) * this.frameThickness,
-        topHeight,
-        this.lowHeight,
+        topWidth,
+        this.topFrameConfig.height,
+        this.topFrameConfig.lowHeight ?? 0,
         this.frameThickness,
         this.interiorGap,
-        this.openingDirection,
-        this.horizontalGlazingBarsNb,
-        this.verticalGlazingBarsNb,
-        this.selectedTopShape
+        this.topFrameConfig.openingDirection,
+        this.topFrameConfig.horizontalGlazingBarsNb,
+        this.topFrameConfig.verticalGlazingBarsNb,
+        this.topFrameConfig.shape,
+        this.topFrameConfig.stileNb,
+        this.topFrameConfig.railNb
       );
 
       topFrame.position.set(
-        -this.frameThickness / 2,
-        bottomHeight + topHeight / 2 - this.frameThickness / 2, // centré par rapport à la base
+        bottomCenter.x,
+        this.getMaxBottomHeight() + this.topFrameConfig.height / 2 - this.frameThickness / 2,
         0
       );
 
       frames.push(topFrame);
     }
 
+
     this.windowGroup = new THREE.Group().add(...frames);
     this.scene.add(this.windowGroup);
 
-    // Ajustement automatique du zoom de la caméra pour englober le groupe
     const box = new THREE.Box3().setFromObject(this.windowGroup);
     const size = new THREE.Vector3();
     box.getSize(size);
@@ -124,13 +181,13 @@ export class ThreeJS {
   init() {
     this.scene = new THREE.Scene();
     this.renderer = new THREE.WebGLRenderer({antialias: true});
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setPixelRatio(this.previewContainerRef.nativeElement.devicePixelRatio);
     this.renderer.setClearColor(0x000000, 0);
 
     const height = window.innerHeight;
     const width = height;
     this.renderer.setSize(width, height);
-    document.body.appendChild(this.renderer.domElement);
+    this.previewContainerRef.nativeElement.appendChild(this.renderer.domElement);
 
     const viewSize = 5; 
     const left = -viewSize;
@@ -152,4 +209,35 @@ export class ThreeJS {
 
     this.renderer.render(this.scene, this.camera);
   }
+
+  toggleTopFrame() {
+    this.hasTopFrame = !this.hasTopFrame;
+    this.onDimensionChange();
+  }
+
+  addBottomFrame() {
+    this.bottomFrameConfigs.push(this.createDefaultConfig());
+    this.bottomFrameNb = this.bottomFrameConfigs.length;
+    this.onDimensionChange();
+  }
+
+  removeBottomFrame(index: number) {
+    if (this.bottomFrameConfigs.length > 1) {
+      this.bottomFrameConfigs.splice(index, 1);
+      this.bottomFrameNb = this.bottomFrameConfigs.length;
+      this.onDimensionChange();
+    }
+  }
+
+  getTotalBottomFramesWidth(): number {
+    const frameCount = this.bottomFrameConfigs.length;
+    const widthsSum = this.bottomFrameConfigs.reduce((sum, config) => sum + config.width, 0);
+    const spacing = (frameCount - 1) * this.frameThickness;
+    return widthsSum + spacing;
+  }
+
+  getMaxBottomHeight(): number {
+    return Math.max(...this.bottomFrameConfigs.map(cfg => cfg.height));
+  }
+
 }
