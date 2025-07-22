@@ -96,6 +96,7 @@ export class ThreeJS implements AfterViewInit {
     this.updateConfigs();
     const frames: THREE.Group[] = [];
     const bottomFramesGroup = new THREE.Group();
+    const topFrameGroup = new THREE.Group();
 
     let currentX = -this.windowWidth / 2;
 
@@ -116,6 +117,18 @@ export class ThreeJS implements AfterViewInit {
         config.stileNb,
         config.railNb
       );
+
+      // 🔁 Vérifie si c’est le premier frame et qu’il est un triangle
+      //     et si le deuxième est un rectangle
+      if (
+        i === 0 &&
+        this.bottomFrameConfigs.length > 1 &&
+        (config.shape === Shapes.Triangle || config.shape === Shapes.Trapezoid) &&
+        this.bottomFrameConfigs[1].shape === Shapes.Rectangle
+      ) {
+        frame.scale.x *= -1; // 🔁 miroir horizontal
+      }
+
 
       frame.position.set(
         currentX + frameWidth / 2,
@@ -159,15 +172,28 @@ export class ThreeJS implements AfterViewInit {
       );
 
       frames.push(topFrame);
+      topFrameGroup.add(topFrame);
     }
 
 
-    this.windowGroup = new THREE.Group().add(...frames);
+    this.windowGroup = new THREE.Group();
+    this.windowGroup.add(bottomFramesGroup);
+
+    if (this.hasTopFrame) {
+      this.windowGroup.add(topFrameGroup);
+    }
+
+    // 🧲 Recentrer tout le groupe final autour de (0,0)
+    const fullBox = new THREE.Box3().setFromObject(this.windowGroup);
+    const fullCenter = new THREE.Vector3();
+    fullBox.getCenter(fullCenter);
+    this.windowGroup.position.x -= fullCenter.x;
+    this.windowGroup.position.y -= fullCenter.y;
+
     this.scene.add(this.windowGroup);
 
-    const box = new THREE.Box3().setFromObject(this.windowGroup);
     const size = new THREE.Vector3();
-    box.getSize(size);
+    fullBox.getSize(size);
     const maxDim = Math.max(size.x, size.y);
     const margin = 3;
     const halfDim = (maxDim * margin) / 2;
