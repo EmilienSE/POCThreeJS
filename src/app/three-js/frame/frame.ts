@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as THREE from 'three';
-import { OpeningDirection } from '../../utils/opening-direction.enum';
-import { Shapes } from '../../utils/shapes';
+import { OpeningDirection } from '../utils/opening-direction.enum';
+import { Shapes } from '../utils/shapes';
 import { createRectangleFrame } from './shapes/rectangle-frame';
 import { createCircleFrame } from './shapes/circle-frame';
 import { createHalfMoonFrame } from './shapes/half-moon-frame';

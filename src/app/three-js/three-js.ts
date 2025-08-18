@@ -2,11 +2,11 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import * as THREE from 'three';
-import { OpeningDirection } from '../utils/opening-direction.enum';
-import { FRAME_THICKNESS, WINDOW_WIDTH, INTERIOR_GAP, TOP_FRAME_HEIGHT, BOTTOM_FRAME_HEIGHT, LOW_HEIGHT } from '../utils/consts';
+import { OpeningDirection } from './utils/opening-direction.enum';
+import { FRAME_THICKNESS, WINDOW_WIDTH, INTERIOR_GAP, TOP_FRAME_HEIGHT, BOTTOM_FRAME_HEIGHT, LOW_HEIGHT } from './utils/consts';
 import { Frame } from './frame/frame';
-import { Shapes } from '../utils/shapes';
-import { FrameConfig } from '../utils/frame-config';
+import { Shapes } from './utils/shapes';
+import { FrameConfig } from './utils/frame-config';
 import { ElementRef, ViewChild } from '@angular/core';
 
 

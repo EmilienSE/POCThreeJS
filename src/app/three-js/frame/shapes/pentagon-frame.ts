@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { OpeningDirection } from '../../../utils/opening-direction.enum';
-import { GLASS, LINE_COLOR } from '../../../utils/consts';
+import { OpeningDirection } from '../../utils/opening-direction.enum';
+import { GLASS, LINE_COLOR } from '../../utils/consts';
 
 // Fonction utilitaire pour calculer les sommets d'un pentagone régulier centré
 function getPentagonVertices(width: number, height: number, leftVerticalHeight: number): THREE.Vector2[] {

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { OpeningDirection } from '../../../utils/opening-direction.enum';
-import { GLASS, LINE_COLOR } from '../../../utils/consts';
+import { OpeningDirection } from '../../utils/opening-direction.enum';
+import { GLASS, LINE_COLOR } from '../../utils/consts';
 
 export function createCircleFrame(
   frameWidth: number,
